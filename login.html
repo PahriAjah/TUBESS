@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sign In - RESQ</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <!-- CDN untuk Ikon (FontAwesome) -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body { font-family: 'Poppins', sans-serif; }
+    </style>
+</head>
+<body class="bg-white text-slate-800 min-h-screen flex justify-center relative overflow-hidden">
+
+    <!-- Efek Glow Latar Belakang dari Figma -->
+    <div class="absolute top-[-10%] right-[-10%] w-[300px] h-[300px] bg-yellow-200/50 rounded-full filter blur-[80px] -z-10"></div>
+    <div class="absolute bottom-[10%] left-[-10%] w-[250px] h-[250px] bg-yellow-200/40 rounded-full filter blur-[80px] -z-10"></div>
+
+    <!-- Kontainer Layar Mobile (max-w-md) -->
+    <div class="w-full max-w-md px-8 py-12 flex flex-col h-full z-10">
+        
+        <!-- Ilustrasi Burger (Placeholder) -->
+        <div class="w-full h-48 flex justify-center items-center mb-6">
+            <img src="./assets/burger-signin.png" alt="Burger Sign In" class="object-contain h-full w-full">
+        </div>
+
+        <div class="text-center mb-8">
+            <h1 class="text-2xl font-bold text-slate-900 mb-1">Sign in</h1>
+            <p class="text-xs text-slate-500">Enter Valid password & username</p>
+        </div>
+
+        <!-- Form Inputs -->
+        <div class="space-y-4 mb-2">
+            <!-- Username/Email -->
+            <div class="relative">
+                <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                    <i class="far fa-user text-slate-400"></i>
+                </div>
+                <input type="email" id="email" placeholder="User name (Email)" class="w-full pl-10 pr-4 py-3.5 border border-slate-300 rounded-2xl text-sm focus:outline-none focus:border-yellow-400 focus:ring-1 focus:ring-yellow-400">
+            </div>
+
+            <!-- Password -->
+            <div class="relative">
+                <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                    <i class="fas fa-lock text-slate-400"></i>
+                </div>
+                <input type="password" id="password" placeholder="Password" class="w-full pl-10 pr-10 py-3.5 border border-slate-300 rounded-2xl text-sm focus:outline-none focus:border-yellow-400 focus:ring-1 focus:ring-yellow-400">
+                <div class="absolute inset-y-0 right-0 pr-4 flex items-center cursor-pointer">
+                    <i class="far fa-eye-slash text-slate-400 hover:text-slate-600"></i>
+                </div>
+            </div>
+        </div>
+
+        <!-- Forget Password -->
+        <div class="flex justify-end mb-6">
+            <a href="#" class="text-[11px] font-semibold text-blue-900 hover:underline">Forget Password</a>
+        </div>
+
+        <!-- Pesan Error -->
+        <p id="pesan-error" class="text-red-500 text-xs text-center mb-4 hidden"></p>
+
+        <!-- Tombol Login -->
+        <button id="btn-login" class="w-full bg-[#FACC15] hover:bg-yellow-500 text-slate-900 font-bold py-3.5 rounded-2xl transition-all active:scale-95 mb-6">
+            Login
+        </button>
+
+        <!-- Divider -->
+        <div class="flex items-center justify-center space-x-2 mb-6">
+            <div class="h-px w-12 bg-slate-300"></div>
+            <span class="text-xs text-slate-400 font-medium">Or Continue With</span>
+            <div class="h-px w-12 bg-slate-300"></div>
+        </div>
+
+        <!-- Social Buttons -->
+        <div class="flex gap-4 mb-10">
+            <button class="flex-1 bg-[#0F172A] text-white flex items-center justify-center gap-2 py-3 rounded-2xl text-xs font-medium hover:bg-slate-800 transition">
+                <img src="https://www.svgrepo.com/show/475656/google-color.svg" class="w-4 h-4" alt="Google"> Google
+            </button>
+            <button class="flex-1 bg-[#0F172A] text-white flex items-center justify-center gap-2 py-3 rounded-2xl text-xs font-medium hover:bg-slate-800 transition">
+                <i class="fab fa-whatsapp text-green-500 text-base"></i> WhatsApp
+            </button>
+        </div>
+
+        <!-- Footer -->
+        <div class="mt-auto text-center">
+            <p class="text-xs text-slate-500">
+                Dont have an account? <a href="register.html" class="text-yellow-500 font-bold hover:underline">Sign up</a>
+            </p>
+        </div>
+    </div>
+
+    <!-- Script Firebase -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.11.1/firebase-app.js";
+        import { getAuth, signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/10.11.1/firebase-auth.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyByqnXbrbrgto6n3IEkKagKcuyD2YeOPEQ",
+            authDomain: "ecoeats-fa1ea.firebaseapp.com",
+            projectId: "ecoeats-fa1ea",
+            storageBucket: "ecoeats-fa1ea.firebasestorage.app",
+            messagingSenderId: "818770196563",
+            appId: "1:818770196563:web:77ecff64e880c683e3eea6"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+
+        document.getElementById("btn-login").addEventListener("click", async () => {
+            const email = document.getElementById("email").value;
+            const password = document.getElementById("password").value;
+            const errorTxt = document.getElementById("pesan-error");
+            
+            try {
+                await signInWithEmailAndPassword(auth, email, password);
+                window.location.href = "index.html"; 
+            } catch (error) {
+                errorTxt.innerText = "Kredensial tidak valid. Silakan coba lagi.";
+                errorTxt.classList.remove("hidden");
+            }
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RESQ - Selamat Datang</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;700;800&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: { sans: ['Poppins', 'sans-serif'] },
+                    colors: {
+                        resqYellow: '#FACC15', // Kuning khas RESQ
+                        resqNavy: '#172554',   // Biru dongker khas RESQ
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        /* Animasi transisi antar layar agar tidak kaku */
+        .fade-in {
+            animation: fadeIn 0.8s ease-in-out forwards;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        /* Memastikan layar yang disembunyikan benar-benar hilang */
+        .hidden-screen {
+            display: none !important;
+        }
+    </style>
+</head>
+<body class="bg-slate-50 text-resqNavy font-sans h-screen w-screen overflow-hidden relative selection:bg-resqYellow selection:text-resqNavy">
+
+    <div id="screen-0" class="absolute inset-0 bg-resqYellow flex items-center justify-center z-50 transition-opacity duration-700">
+        <h1 class="text-6xl md:text-8xl font-extrabold text-resqNavy tracking-widest drop-shadow-sm">
+            RESQ
+        </h1>
+    </div>
+
+    <div class="h-full w-full flex flex-col relative max-w-4xl mx-auto px-6">
+        
+        <div id="skip-container" class="absolute top-8 right-6 md:right-12 hidden-screen z-40">
+            <a href="login.html" class="text-resqNavy font-bold hover:text-blue-700 transition-colors cursor-pointer text-lg">
+                Skip
+            </a>
+        </div>
+
+        <div id="screen-1" class="hidden-screen flex-1 flex flex-col items-center justify-center text-center pb-12 fade-in">
+            
+            <div class="w-full max-w-md h-64 md:h-80 flex items-center justify-center mb-8">
+                <img src="./assets/chef.png" alt="Ilustrasi Chef" class="object-contain h-full w-full drop-shadow-md">
+            </div>
+
+            <h2 class="text-3xl md:text-4xl font-extrabold mb-4 max-w-lg leading-tight">
+                Save delicious surplus<br>meals effortlessly
+            </h2>
+            <p class="text-slate-500 max-w-md text-sm md:text-base leading-relaxed mb-10">
+                Get tasty surplus dishes from nearby restaurants at lower prices while helping reduce food waste.
+            </p>
+
+            <button onclick="goToScreen(2)" class="bg-resqYellow hover:bg-yellow-500 text-resqNavy font-bold text-lg w-full max-w-md py-4 rounded-full shadow-md active:scale-95 transition-transform">
+                Next
+            </button>
+        </div>
+
+        <div id="screen-2" class="hidden-screen flex-1 flex flex-col items-center justify-center text-center pb-12 fade-in">
+            
+            <div class="w-full max-w-md h-64 md:h-80 flex items-center justify-center mb-8">
+                <img src="./assets/earth.png" alt="Ilustrasi Bumi" class="object-contain h-full w-full drop-shadow-md">
+            </div>
+
+            <h2 class="text-3xl md:text-4xl font-extrabold mb-4 max-w-lg leading-tight">
+                Delicious Deals<br>Greener Impact
+            </h2>
+            <p class="text-slate-500 max-w-md text-sm md:text-base leading-relaxed mb-10">
+                Get quality meals at lower prices and help the planet by choosing delicious surplus dishes that reduce waste and support a more sustainable lifestyle.
+            </p>
+
+            <a href="login.html" class="inline-block bg-resqYellow hover:bg-yellow-500 text-resqNavy font-bold text-lg w-full max-w-md py-4 rounded-full shadow-md active:scale-95 transition-transform">
+                Next
+            </a>
+        </div>
+
+    </div>
+
+    <script>
+        // Fungsi untuk menyembunyikan layar Splash dan masuk ke Layar 1
+        window.addEventListener('DOMContentLoaded', () => {
+            setTimeout(() => {
+                const splash = document.getElementById('screen-0');
+                splash.style.opacity = '0';
+                
+                setTimeout(() => {
+                    splash.classList.add('hidden-screen');
+                    document.getElementById('screen-1').classList.remove('hidden-screen');
+                    document.getElementById('skip-container').classList.remove('hidden-screen');
+                }, 700); // Menunggu animasi CSS opacity selesai
+            }, 2500); // Lama Splash Screen tampil (2.5 detik)
+        });
+
+        // Fungsi navigasi tombol Next dari Layar 1 ke Layar 2
+        function goToScreen(screenNumber) {
+            if (screenNumber === 2) {
+                document.getElementById('screen-1').classList.add('hidden-screen');
+                document.getElementById('screen-2').classList.remove('hidden-screen');
+            }
+        }
+    </script>
+</body>
+</html>

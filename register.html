@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sign Up - RESQ</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style> body { font-family: 'Poppins', sans-serif; } </style>
+</head>
+<body class="bg-white text-slate-800 min-h-screen flex justify-center relative overflow-hidden">
+
+    <div class="absolute top-[-10%] right-[-10%] w-[300px] h-[300px] bg-yellow-200/50 rounded-full filter blur-[80px] -z-10"></div>
+    <div class="absolute bottom-[10%] left-[-10%] w-[250px] h-[250px] bg-yellow-200/40 rounded-full filter blur-[80px] -z-10"></div>
+
+    <div class="w-full max-w-md px-8 py-12 flex flex-col h-full z-10">
+        
+        <!-- Ilustrasi Amplop (Placeholder) -->
+        <div class="w-full h-48 flex justify-center items-center mb-4 mt-4">
+            <img src="./assets/rafiki-signup.png" alt="Rafiki Sign Up" class="object-contain h-full w-full">
+        </div>
+
+        <div class="text-center mb-8">
+            <h1 class="text-2xl font-bold text-slate-900 mb-1">Sign Up</h1>
+            <p class="text-xs text-slate-500">Use proper information to continue</p>
+        </div>
+
+        <!-- Form Inputs -->
+        <div class="space-y-4 mb-6">
+            <div class="relative">
+                <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                    <i class="far fa-user text-slate-400"></i>
+                </div>
+                <input type="text" placeholder="Name" class="w-full pl-10 pr-4 py-3.5 border border-slate-300 rounded-2xl text-sm focus:outline-none focus:border-yellow-400">
+            </div>
+
+            <div class="relative">
+                <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                    <i class="far fa-envelope text-slate-400"></i>
+                </div>
+                <input type="email" id="reg-email" placeholder="Email address" class="w-full pl-10 pr-4 py-3.5 border border-slate-300 rounded-2xl text-sm focus:outline-none focus:border-yellow-400">
+            </div>
+
+            <div class="relative">
+                <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                    <i class="fas fa-lock text-slate-400"></i>
+                </div>
+                <input type="password" id="reg-password" placeholder="Password" class="w-full pl-10 pr-10 py-3.5 border border-slate-300 rounded-2xl text-sm focus:outline-none focus:border-yellow-400">
+                <div class="absolute inset-y-0 right-0 pr-4 flex items-center cursor-pointer">
+                    <i class="far fa-eye-slash text-slate-400"></i>
+                </div>
+            </div>
+        </div>
+
+        <p class="text-[10px] text-center text-slate-400 mb-6 px-4">
+            By signing up, You are agree to our <span class="text-yellow-500 font-semibold">Terms & Conditions and Privacy Policy</span>
+        </p>
+
+        <p id="pesan-error-reg" class="text-red-500 text-xs text-center mb-4 hidden"></p>
+
+        <button id="btn-register" class="w-full bg-[#FACC15] hover:bg-yellow-500 text-slate-900 font-bold py-3.5 rounded-2xl transition-all active:scale-95 mb-6">
+            Create account
+        </button>
+
+        <!-- Footer -->
+        <div class="mt-auto text-center">
+            <p class="text-xs text-slate-500">
+                Already have an account? <a href="login.html" class="text-yellow-500 font-bold hover:underline">Sign in</a>
+            </p>
+        </div>
+    </div>
+
+    <!-- Script Firebase -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.11.1/firebase-app.js";
+        import { getAuth, createUserWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/10.11.1/firebase-auth.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyByqnXbrbrgto6n3IEkKagKcuyD2YeOPEQ",
+            authDomain: "ecoeats-fa1ea.firebaseapp.com",
+            projectId: "ecoeats-fa1ea",
+            storageBucket: "ecoeats-fa1ea.firebasestorage.app",
+            messagingSenderId: "818770196563",
+            appId: "1:818770196563:web:77ecff64e880c683e3eea6"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+
+        document.getElementById("btn-register").addEventListener("click", async () => {
+            const email = document.getElementById("reg-email").value;
+            const password = document.getElementById("reg-password").value;
+            const errorTxt = document.getElementById("pesan-error-reg");
+            
+            try {
+                await createUserWithEmailAndPassword(auth, email, password);
+                alert("Akun berhasil dibuat!");
+                window.location.href = "index.html"; 
+            } catch (error) {
+                errorTxt.innerText = "Gagal membuat akun: " + error.message;
+                errorTxt.classList.remove("hidden");
+            }
+        });
+    </script>
+</body>
+</html>

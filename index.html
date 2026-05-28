@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RESQ - Beranda</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @keyframes fadeSlideUp {
+            0% { opacity: 0; transform: translateY(20px); }
+            100% { opacity: 1; transform: translateY(0); }
+        }
+        .animate-fade { animation: fadeSlideUp 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-800 min-h-screen font-sans relative pb-12">
+
+    <div class="absolute top-0 left-0 w-full h-[350px] bg-gradient-to-b from-yellow-100 to-transparent -z-10"></div>
+
+    <nav class="max-w-4xl mx-auto px-6 py-6 flex justify-between items-center">
+        <h1 class="text-3xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-blue-900 to-blue-600 tracking-tight">RESQ</h1>
+        
+        <div id="profil-user" class="flex items-center gap-4 hidden">
+            <span id="nama-user" class="text-sm font-semibold text-blue-900">Halo, User!</span>
+            <button id="btn-logout" class="text-xs bg-white text-red-500 font-bold px-3 py-1.5 rounded-full border border-red-100 shadow-sm hover:bg-red-50 transition-colors">
+                Keluar
+            </button>
+        </div>
+    </nav>
+
+    <main class="max-w-4xl mx-auto px-6 mt-4 animate-fade">
+        <div class="mb-8">
+            <h2 class="text-2xl font-bold text-blue-950 mb-1">Menu Surplus Hari Ini 🍲</h2>
+            <p class="text-slate-500 text-sm">Makanan berkualitas dengan harga hemat, sekaligus mengurangi food waste.</p>
+        </div>
+
+        <div id="daftar-menu" class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <p class="text-slate-400 text-center col-span-2 py-12">Sedang memuat menu lezat untukmu...</p>
+        </div>
+    </main>
+
+    <div id="modal-checkout" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+        <div class="bg-white rounded-3xl p-8 max-w-md w-full shadow-2xl">
+            <h3 class="text-2xl font-bold text-blue-950 mb-2">Konfirmasi Pesanan</h3>
+            <p class="text-sm text-slate-500 mb-6">Pilih metode pembayaran untuk menyelesaikan pesananmu.</p>
+            <div class="bg-slate-50 p-4 rounded-2xl mb-6">
+                <p class="text-sm font-semibold text-slate-700" id="modal-nama-menu">Nama Menu</p>
+                <p class="text-lg font-bold text-blue-900" id="modal-harga">Rp 0</p>
+            </div>
+            <select id="metode-pembayaran" class="w-full bg-white border border-slate-200 text-slate-700 rounded-xl px-4 py-3 mb-6 focus:outline-none focus:border-blue-500">
+                <option value="QRIS">QRIS / E-Wallet</option>
+                <option value="Tunai">Tunai di Outlet</option>
+            </select>
+            <div class="flex gap-3">
+                <button onclick="tutupModal()" class="w-1/3 bg-slate-100 hover:bg-slate-200 text-slate-600 font-bold py-3 rounded-xl">Batal</button>
+                <button id="btn-konfirmasi" class="w-2/3 bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 rounded-xl">Bayar Sekarang</button>
+            </div>
+        </div>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.11.1/firebase-app.js";
+        import { getFirestore, collection, getDocs, addDoc } from "https://www.gstatic.com/firebasejs/10.11.1/firebase-firestore.js";
+        // Tambahan modul Autentikasi untuk deteksi akun
+        import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.11.1/firebase-auth.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyByqnXbrbrgto6n3IEkKagKcuyD2YeOPEQ",
+            authDomain: "ecoeats-fa1ea.firebaseapp.com",
+            projectId: "ecoeats-fa1ea",
+            storageBucket: "ecoeats-fa1ea.firebasestorage.app",
+            messagingSenderId: "818770196563",
+            appId: "1:818770196563:web:77ecff64e880c683e3eea6"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+        const auth = getAuth(app);
+
+        let menuTerpilih = null;
+        let emailPengguna = "Guest"; // Menyimpan email pengguna yang login
+
+        // 1. FUNGSI SATPAM: Mengecek siapa yang masuk
+        onAuthStateChanged(auth, (user) => {
+            if (user) {
+                // Jika terdeteksi ada yang login, munculkan emailnya di pojok
+                emailPengguna = user.email;
+                document.getElementById("nama-user").innerText = "Halo, " + user.email.split('@')[0] + "!";
+                document.getElementById("profil-user").classList.remove("hidden");
+                muatMenuSurplus(); // Muat data makanan hanya jika sudah login
+            } else {
+                // Jika tidak ada yang login, tendang ke halaman login
+                window.location.href = "login.html";
+            }
+        });
+
+        // 2. FUNGSI LOGOUT
+        document.getElementById("btn-logout").addEventListener("click", () => {
+            signOut(auth).then(() => {
+                window.location.href = "login.html";
+            }).catch((error) => {
+                console.error("Gagal keluar:", error);
+            });
+        });
+
+        async function muatMenuSurplus() {
+            try {
+                const querySnapshot = await getDocs(collection(db, "menus"));
+                let htmlKonten = "";
+
+                querySnapshot.forEach((doc) => {
+                    const item = doc.data();
+                    const menuId = doc.id;
+                    const hargaSurplus = new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }).format(item.surplus_price);
+
+                    htmlKonten += `
+                        <div class="bg-white border border-slate-100 rounded-3xl p-6 shadow-sm flex flex-col justify-between">
+                            <div>
+                                <h3 class="text-xl font-bold text-slate-900 mb-3">${item.name}</h3>
+                                <p class="text-slate-400 text-xs mb-4">Sisa Porsi: ${item.stock}</p>
+                            </div>
+                            <div class="border-t border-slate-50 pt-4 mt-2 flex justify-between items-center">
+                                <span class="text-lg font-extrabold text-blue-900">${hargaSurplus}</span>
+                                <button onclick="bukaModal('${menuId}', '${item.name}', ${item.surplus_price}, '${item.restaurant_id}')" class="bg-yellow-400 hover:bg-yellow-500 text-blue-950 font-bold text-sm px-5 py-2.5 rounded-2xl shadow-sm transition-all">
+                                    Pesan
+                                </button>
+                            </div>
+                        </div>
+                    `;
+                });
+                document.getElementById("daftar-menu").innerHTML = htmlKonten;
+            } catch (error) {
+                console.error("Error:", error);
+            }
+        }
+
+        window.bukaModal = function(id, nama, harga, restaurant_id) {
+            menuTerpilih = { id, nama, harga, restaurant_id };
+            document.getElementById("modal-nama-menu").innerText = nama;
+            document.getElementById("modal-harga").innerText = new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR' }).format(harga);
+            document.getElementById("modal-checkout").classList.remove("hidden");
+        }
+
+        window.tutupModal = function() {
+            document.getElementById("modal-checkout").classList.add("hidden");
+            menuTerpilih = null;
+        }
+
+        document.getElementById("btn-konfirmasi").addEventListener("click", async () => {
+            if(!menuTerpilih) return;
+            const tombol = document.getElementById("btn-konfirmasi");
+            tombol.innerText = "Memproses...";
+            tombol.disabled = true;
+
+            const metodePembayaran = document.getElementById("metode-pembayaran").value;
+            const kodeUnik = "RESQ-" + Math.random().toString(36).substring(2, 6).toUpperCase();
+
+            try {
+                await addDoc(collection(db, "orders"), {
+                    product_name: menuTerpilih.nama,
+                    product_id: menuTerpilih.id,
+                    restaurant_id: menuTerpilih.restaurant_id,
+                    total_price: menuTerpilih.harga,
+                    payment_method: metodePembayaran,
+                    pickup_code: kodeUnik,
+                    customer_email: emailPengguna, // <--- Sekarang pesanan mencatat nama pembelinya!
+                    status: "Menunggu Pengambilan",
+                    timestamp: new Date()
+                });
+                alert(`Pesanan Berhasil!\nKode: ${kodeUnik}`);
+                tutupModal();
+            } catch (error) {
+                alert("Gagal memproses pesanan.");
+            } finally {
+                tombol.innerText = "Bayar Sekarang";
+                tombol.disabled = false;
+            }
+        });
+    </script>
+</body>
+</html>
