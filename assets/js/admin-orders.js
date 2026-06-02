@@ -10,10 +10,17 @@ let currentActiveOrders = [];
 async function loadOrdersPage(user, partnerProfile) {
     const subtitle = byId("orders-subtitle");
     const ordersBody = byId("orders-body");
+    const pickupPanel = byId("pickup-code-panel");
+    const pickupTitle = byId("pickup-code-title");
+    const pickupValue = byId("pickup-code-value");
+    const pickupMeta = byId("pickup-code-meta");
+    const pickupDescription = byId("pickup-code-description");
 
     try {
         const { orders } = filterDataForPartner(await loadAdminData(), partnerProfile);
-        const activeOrders = orders.filter((order) => !isPickedUp(order.status));
+        const activeOrders = orders
+            .filter((order) => !isPickedUp(order.status))
+            .sort((a, b) => Number(b.timestamp || 0) - Number(a.timestamp || 0));
         currentActiveOrders = activeOrders;
         const waitingOrders = activeOrders.filter((order) => String(order.status).toLowerCase().includes("menunggu"));
 
@@ -21,6 +28,21 @@ async function loadOrdersPage(user, partnerProfile) {
         byId("orders-waiting-count").innerText = waitingOrders.length.toLocaleString("id-ID");
         byId("orders-total-value").innerText = formatRupiah(activeOrders.reduce((sum, order) => sum + order.totalPrice, 0));
         subtitle.innerText = "Pantau semua pesanan yang belum selesai diambil pelanggan.";
+
+        if (activeOrders.length) {
+            const latestOrder = activeOrders[0];
+            pickupPanel?.classList.remove("hidden");
+            pickupTitle.innerText = latestOrder.pickupCode || "-";
+            pickupValue.innerText = latestOrder.pickupCode || "-";
+            pickupMeta.innerText = `${getCustomerName(latestOrder.customerEmail)} - ${formatDate(latestOrder.timestamp)}`;
+            pickupDescription.innerText = "Kode pengambilan ini harus dicocokkan oleh pelanggan saat ambil pesanan di mitra bisnis. Kode hanya tampil ketika ada pesanan aktif.";
+        } else {
+            pickupPanel?.classList.add("hidden");
+            pickupTitle.innerText = "-";
+            pickupValue.innerText = "-";
+            pickupMeta.innerText = "Belum ada pesanan aktif.";
+            pickupDescription.innerText = "Kode ini muncul saat ada pesanan aktif. Minta pelanggan menyebutkan kode ini saat mengambil pesanan di mitra bisnis.";
+        }
 
         if (!activeOrders.length) {
             ordersBody.innerHTML = emptyRow("Tidak ada pesanan aktif saat ini.", 6);
@@ -59,10 +81,7 @@ function renderOrders(query = "") {
         return;
     }
 
-    ordersBody.innerHTML = filteredOrders
-        .sort((a, b) => Number(b.timestamp || 0) - Number(a.timestamp || 0))
-        .map(orderRow)
-        .join("");
+    ordersBody.innerHTML = filteredOrders.map(orderRow).join("");
 }
 
 function orderRow(order) {

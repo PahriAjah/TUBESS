@@ -19,7 +19,6 @@
                 <a href="admin.html" data-admin-nav="dashboard" class="flex items-center gap-4 rounded-lg px-4 py-3 text-sm font-bold tracking-wide transition"><i data-lucide="layout-grid" class="h-5 w-5"></i><span>Dashboard</span></a>
                 <a href="admin-products.html" data-admin-nav="products" class="flex items-center gap-4 rounded-lg px-4 py-3 text-sm font-bold tracking-wide transition"><i data-lucide="utensils" class="h-5 w-5"></i><span>Kelola Produk</span></a>
                 <a href="admin-orders.html" data-admin-nav="orders" class="flex items-center gap-4 rounded-lg px-4 py-3 text-sm font-bold tracking-wide transition"><i data-lucide="shopping-bag" class="h-5 w-5"></i><span>Pesanan Aktif</span></a>
-                <a href="admin-scan.html" data-admin-nav="scan" class="flex items-center gap-4 rounded-lg px-4 py-3 text-sm font-bold tracking-wide transition"><i data-lucide="qr-code" class="h-5 w-5"></i><span>Scan QR</span></a>
                 <a href="admin-revenue.html" data-admin-nav="revenue" class="flex items-center gap-4 rounded-lg px-4 py-3 text-sm font-bold tracking-wide transition"><i data-lucide="wallet" class="h-5 w-5"></i><span>Pendapatan</span></a>
             </nav>
             <button id="btn-logout-side" class="flex items-center gap-4 rounded-lg px-4 py-3 text-left text-sm font-semibold tracking-wide text-slate-600 transition hover:bg-slate-100"><i data-lucide="log-out" class="h-5 w-5"></i><span>Logout</span></button>
@@ -40,6 +39,20 @@
             <main class="flex-1 overflow-y-auto p-5 md:p-8 lg:p-10">
                 <section class="mx-auto max-w-6xl">
                     <div class="mb-10"><h2 class="text-3xl font-black tracking-tight text-resqNavy md:text-4xl">Pesanan Aktif</h2><p id="orders-subtitle" class="mt-3 text-sm font-medium text-slate-500 md:text-base">Memuat data pesanan aktif...</p></div>
+                    <section id="pickup-code-panel" class="mb-10 hidden rounded-lg border border-yellow-100 bg-yellow-50 p-6 shadow-sm">
+                        <div class="flex flex-col gap-5 lg:flex-row lg:items-start lg:justify-between">
+                            <div class="max-w-2xl">
+                                <p class="text-sm font-bold text-resqBlue">Kode Pengambilan Aktif</p>
+                                <h3 id="pickup-code-title" class="mt-2 text-2xl font-black tracking-tight text-resqNavy">-</h3>
+                                <p id="pickup-code-description" class="mt-3 text-sm font-medium leading-6 text-slate-600">Kode ini muncul saat ada pesanan aktif. Minta pelanggan menyebutkan kode ini saat mengambil pesanan di mitra bisnis.</p>
+                            </div>
+                            <div class="rounded-lg bg-white px-4 py-3 shadow-sm">
+                                <p class="text-xs font-bold uppercase tracking-wider text-slate-500">Kode Pengambilan</p>
+                                <p id="pickup-code-value" class="mt-2 text-2xl font-black tracking-[0.2em] text-resqBlue">-</p>
+                                <p id="pickup-code-meta" class="mt-2 text-xs font-semibold text-slate-500">Belum ada pesanan aktif.</p>
+                            </div>
+                        </div>
+                    </section>
                     <section class="mb-10 grid gap-6 sm:grid-cols-3">
                         <article class="rounded-lg border border-slate-100 bg-white p-6 shadow-sm"><p class="text-sm font-bold text-slate-700">Pesanan Aktif</p><p id="orders-active-count" class="mt-6 text-3xl font-black">0</p></article>
                         <article class="rounded-lg border border-slate-100 bg-white p-6 shadow-sm"><p class="text-sm font-bold text-slate-700">Menunggu Pickup</p><p id="orders-waiting-count" class="mt-6 text-3xl font-black">0</p></article>
@@ -49,7 +62,7 @@
                         <div class="border-b border-slate-100 px-6 py-6"><h3 class="text-lg font-black text-resqNavy md:text-xl">Daftar Pesanan Aktif</h3></div>
                         <div class="overflow-x-auto">
                             <table class="w-full min-w-[1040px] border-collapse text-left">
-                                <thead><tr class="border-b border-slate-100 bg-slate-50/70"><th class="px-6 py-4 text-xs font-bold uppercase tracking-wider text-slate-500">Pelanggan</th><th class="px-6 py-4 text-xs font-bold uppercase tracking-wider text-slate-500">Menu</th><th class="px-6 py-4 text-xs font-bold uppercase tracking-wider text-slate-500">Total</th><th class="px-6 py-4 text-xs font-bold uppercase tracking-wider text-slate-500">Kode</th><th class="px-6 py-4 text-xs font-bold uppercase tracking-wider text-slate-500">Waktu</th><th class="px-6 py-4 text-xs font-bold uppercase tracking-wider text-slate-500">Status</th></tr></thead>
+                                <thead><tr class="border-b border-slate-100 bg-slate-50/70"><th class="px-6 py-4 text-xs font-bold uppercase tracking-wider text-slate-500">Pelanggan</th><th class="px-6 py-4 text-xs font-bold uppercase tracking-wider text-slate-500">Menu</th><th class="px-6 py-4 text-xs font-bold uppercase tracking-wider text-slate-500">Total</th><th class="px-6 py-4 text-xs font-bold uppercase tracking-wider text-slate-500">Kode Pengambilan</th><th class="px-6 py-4 text-xs font-bold uppercase tracking-wider text-slate-500">Waktu</th><th class="px-6 py-4 text-xs font-bold uppercase tracking-wider text-slate-500">Status</th></tr></thead>
                                 <tbody id="orders-body" class="divide-y divide-slate-100"><tr><td colspan="6" class="px-6 py-10 text-center text-sm font-semibold text-slate-500">Memuat data pesanan...</td></tr></tbody>
                             </table>
                         </div>
