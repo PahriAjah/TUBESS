@@ -17,7 +17,7 @@
         </h1>
     </div>
 
-    <div class="h-full w-full flex flex-col relative max-w-4xl mx-auto px-6">
+    <div class="h-full w-full flex flex-col relative max-w-7xl mx-auto px-6">
         
         <div id="skip-container" class="absolute top-8 right-6 md:right-12 hidden-screen z-40">
             <a href="index.html" class="text-resqNavy font-bold hover:text-slate-700 transition-colors cursor-pointer text-lg">
@@ -25,40 +25,40 @@
             </a>
         </div>
 
-        <div id="screen-1" class="hidden-screen flex-1 flex flex-col items-center justify-center text-center pb-12 fade-in">
-            
-            <div class="w-full max-w-md h-64 md:h-80 flex items-center justify-center mb-8">
-                <img src="./assets/chef.png" alt="Ilustrasi Chef" class="object-contain h-full w-full drop-shadow-md">
+        <div id="screen-1" class="hidden-screen flex-1 flex flex-col md:flex-row items-center justify-center gap-10 md:gap-20 text-center md:text-left pb-12 md:pb-0 fade-in">
+            <div class="w-full max-w-md md:max-w-lg h-64 md:h-[400px] flex items-center justify-center order-1 md:order-2 bg-[#f6efd7] rounded-[32px] p-8 shadow-xl">
+                <img src="./assets/chef.png" alt="Ilustrasi Chef" class="object-contain h-full w-full drop-shadow-md hover:scale-105 transition-transform duration-500">
             </div>
 
-            <h2 class="text-3xl md:text-4xl font-extrabold mb-4 max-w-lg leading-tight">
-                Save delicious surplus<br>meals effortlessly
-            </h2>
-            <p class="text-slate-500 max-w-md text-sm md:text-base leading-relaxed mb-10">
-                Get tasty surplus dishes from nearby restaurants at lower prices while helping reduce food waste.
-            </p>
-
-            <button type="button" data-screen-target="2" class="bg-resqYellow hover:bg-yellow-500 text-resqNavy font-bold text-lg w-full max-w-md py-4 rounded-full shadow-md active:scale-95 transition-transform">
-                Next
-            </button>
+            <div class="flex-1 max-w-xl order-2 md:order-1">
+                <h2 class="text-4xl md:text-5xl lg:text-6xl font-extrabold mb-6 leading-tight text-resqBlue">
+                    Save delicious surplus<br>meals effortlessly
+                </h2>
+                <p class="text-slate-500 text-sm md:text-lg leading-relaxed mb-10 font-semibold">
+                    Get tasty surplus dishes from nearby restaurants at lower prices while helping reduce food waste.
+                </p>
+                <button type="button" data-screen-target="2" class="bg-resqYellow hover:bg-yellow-400 text-resqNavy font-black text-lg px-12 py-4 rounded-full shadow-lg shadow-yellow-300/30 active:scale-95 transition-all">
+                    Next
+                </button>
+            </div>
         </div>
 
-        <div id="screen-2" class="hidden-screen flex-1 flex flex-col items-center justify-center text-center pb-12 fade-in">
-            
-            <div class="w-full max-w-md h-64 md:h-80 flex items-center justify-center mb-8">
-                <img src="./assets/earth.png" alt="Ilustrasi Bumi" class="object-contain h-full w-full drop-shadow-md">
+        <div id="screen-2" class="hidden-screen flex-1 flex flex-col md:flex-row-reverse items-center justify-center gap-10 md:gap-20 text-center md:text-left pb-12 md:pb-0 fade-in">
+            <div class="w-full max-w-md md:max-w-lg h-64 md:h-[400px] flex items-center justify-center order-1 md:order-2 bg-resqBlue rounded-[32px] p-8 shadow-xl ring-4 ring-resqBlue/20">
+                <img src="./assets/earth.png" alt="Ilustrasi Bumi" class="object-contain h-full w-full drop-shadow-md hover:scale-105 transition-transform duration-500">
             </div>
 
-            <h2 class="text-3xl md:text-4xl font-extrabold mb-4 max-w-lg leading-tight">
-                Delicious Deals<br>Greener Impact
-            </h2>
-            <p class="text-slate-500 max-w-md text-sm md:text-base leading-relaxed mb-10">
-                Get quality meals at lower prices and help the planet by choosing delicious surplus dishes that reduce waste and support a more sustainable lifestyle.
-            </p>
-
-            <a href="index.html" class="inline-block bg-resqYellow hover:bg-yellow-500 text-resqNavy font-bold text-lg w-full max-w-md py-4 rounded-full shadow-md active:scale-95 transition-transform">
-                Next
-            </a>
+            <div class="flex-1 max-w-xl order-2 md:order-1">
+                <h2 class="text-4xl md:text-5xl lg:text-6xl font-extrabold mb-6 leading-tight text-resqBlue">
+                    Delicious Deals<br>Greener Impact
+                </h2>
+                <p class="text-slate-500 text-sm md:text-lg leading-relaxed mb-10 font-semibold">
+                    Get quality meals at lower prices and help the planet by choosing delicious surplus dishes that reduce waste and support a more sustainable lifestyle.
+                </p>
+                <a href="index.html" class="inline-block bg-resqYellow hover:bg-yellow-400 text-resqNavy font-black text-lg px-12 py-4 rounded-full shadow-lg shadow-yellow-300/30 active:scale-95 transition-all">
+                    Get Started
+                </a>
+            </div>
         </div>
 
     </div>
