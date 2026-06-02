@@ -1,0 +1,34 @@
+body {
+    font-family: 'Poppins', sans-serif;
+}
+
+@keyframes floatFood {
+    0%, 100% { transform: translateY(0) rotate(var(--rotate)); }
+    50% { transform: translateY(-18px) rotate(calc(var(--rotate) + 5deg)); }
+}
+
+@keyframes fadeSlideUp {
+    0% { opacity: 0; transform: translateY(24px); }
+    100% { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.float-food {
+    animation: floatFood 5.5s ease-in-out infinite;
+}
+
+.animate-fade {
+    animation: fadeSlideUp 0.7s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.fade-in {
+    animation: fadeIn 0.8s ease-in-out forwards;
+}
+
+.hidden-screen {
+    display: none !important;
+}

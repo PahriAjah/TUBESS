@@ -1,0 +1,58 @@
+import { initAdminPage } from "./admin-shell.js";
+import { emptyRow, filterDataForPartner, formatDate, getCustomerName, getStatusStyle, isPickedUp, loadAdminData } from "./admin-data.js";
+import { byId, escapeHtml, formatRupiah } from "./utils.js";
+
+initAdminPage("orders", loadOrdersPage);
+
+async function loadOrdersPage(user, partnerProfile) {
+    const subtitle = byId("orders-subtitle");
+    const ordersBody = byId("orders-body");
+
+    try {
+        const { orders } = filterDataForPartner(await loadAdminData(), partnerProfile);
+        const activeOrders = orders.filter((order) => !isPickedUp(order.status));
+        const waitingOrders = activeOrders.filter((order) => String(order.status).toLowerCase().includes("menunggu"));
+
+        byId("orders-active-count").innerText = activeOrders.length.toLocaleString("id-ID");
+        byId("orders-waiting-count").innerText = waitingOrders.length.toLocaleString("id-ID");
+        byId("orders-total-value").innerText = formatRupiah(activeOrders.reduce((sum, order) => sum + order.totalPrice, 0));
+        subtitle.innerText = "Pantau semua pesanan yang belum selesai diambil pelanggan.";
+
+        if (!activeOrders.length) {
+            ordersBody.innerHTML = emptyRow("Tidak ada pesanan aktif saat ini.", 6);
+            return;
+        }
+
+        ordersBody.innerHTML = activeOrders
+            .sort((a, b) => Number(b.timestamp || 0) - Number(a.timestamp || 0))
+            .map(orderRow)
+            .join("");
+    } catch (error) {
+        console.error("Admin orders error:", error);
+        subtitle.innerText = "Gagal memuat pesanan aktif dari Firebase.";
+        ordersBody.innerHTML = emptyRow("Gagal memuat data pesanan.", 6);
+    }
+}
+
+function orderRow(order) {
+    const status = getStatusStyle(order.status);
+
+    return `
+        <tr class="transition hover:bg-slate-50">
+            <td class="px-6 py-5">
+                <p class="text-sm font-bold text-resqNavy">${escapeHtml(getCustomerName(order.customerEmail))}</p>
+                <p class="mt-1 text-xs font-medium text-slate-500">${escapeHtml(order.customerEmail)}</p>
+            </td>
+            <td class="px-6 py-5">
+                <p class="text-sm font-bold text-resqNavy">${escapeHtml(order.productName)}</p>
+                <p class="mt-1 text-xs font-medium text-slate-500">${escapeHtml(order.restaurantId)}</p>
+            </td>
+            <td class="px-6 py-5 text-sm font-bold text-resqNavy">${formatRupiah(order.totalPrice)}</td>
+            <td class="px-6 py-5 text-sm font-semibold text-slate-700">${escapeHtml(order.pickupCode)}</td>
+            <td class="px-6 py-5 text-sm font-medium text-slate-700">${formatDate(order.timestamp)}</td>
+            <td class="px-6 py-5">
+                <span class="inline-flex rounded-full ${status.className} px-3 py-1 text-xs font-bold">${escapeHtml(status.label)}</span>
+            </td>
+        </tr>
+    `;
+}

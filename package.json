@@ -1,0 +1,8 @@
+{
+  "scripts": {
+    "start": "node local-server.js"
+  },
+  "dependencies": {
+    "firebase": "^12.14.0"
+  }
+}
