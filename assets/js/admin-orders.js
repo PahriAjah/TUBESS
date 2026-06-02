@@ -3,6 +3,9 @@ import { emptyRow, filterDataForPartner, formatDate, getCustomerName, getStatusS
 import { byId, escapeHtml, formatRupiah } from "./utils.js";
 
 initAdminPage("orders", loadOrdersPage);
+setupOrdersSearch();
+
+let currentActiveOrders = [];
 
 async function loadOrdersPage(user, partnerProfile) {
     const subtitle = byId("orders-subtitle");
@@ -11,6 +14,7 @@ async function loadOrdersPage(user, partnerProfile) {
     try {
         const { orders } = filterDataForPartner(await loadAdminData(), partnerProfile);
         const activeOrders = orders.filter((order) => !isPickedUp(order.status));
+        currentActiveOrders = activeOrders;
         const waitingOrders = activeOrders.filter((order) => String(order.status).toLowerCase().includes("menunggu"));
 
         byId("orders-active-count").innerText = activeOrders.length.toLocaleString("id-ID");
@@ -23,15 +27,42 @@ async function loadOrdersPage(user, partnerProfile) {
             return;
         }
 
-        ordersBody.innerHTML = activeOrders
-            .sort((a, b) => Number(b.timestamp || 0) - Number(a.timestamp || 0))
-            .map(orderRow)
-            .join("");
+        renderOrders(getSearchQuery());
     } catch (error) {
         console.error("Admin orders error:", error);
         subtitle.innerText = "Gagal memuat pesanan aktif dari Firebase.";
         ordersBody.innerHTML = emptyRow("Gagal memuat data pesanan.", 6);
     }
+}
+
+function setupOrdersSearch() {
+    getSearchInput()?.addEventListener("input", () => renderOrders(getSearchQuery()));
+}
+
+function renderOrders(query = "") {
+    const ordersBody = byId("orders-body");
+    const filteredOrders = query
+        ? currentActiveOrders.filter((order) => searchableText(
+            order.customerEmail,
+            getCustomerName(order.customerEmail),
+            order.productName,
+            order.restaurantId,
+            order.totalPrice,
+            order.pickupCode,
+            order.status,
+            formatDate(order.timestamp)
+        ).includes(query))
+        : currentActiveOrders;
+
+    if (!filteredOrders.length) {
+        ordersBody.innerHTML = emptyRow(`Tidak ada pesanan yang cocok dengan "${query}".`, 6);
+        return;
+    }
+
+    ordersBody.innerHTML = filteredOrders
+        .sort((a, b) => Number(b.timestamp || 0) - Number(a.timestamp || 0))
+        .map(orderRow)
+        .join("");
 }
 
 function orderRow(order) {
@@ -55,4 +86,20 @@ function orderRow(order) {
             </td>
         </tr>
     `;
+}
+
+function getSearchInput() {
+    return document.querySelector('header input[type="search"]');
+}
+
+function getSearchQuery() {
+    return normalizeSearch(getSearchInput()?.value || "");
+}
+
+function searchableText(...values) {
+    return normalizeSearch(values.join(" "));
+}
+
+function normalizeSearch(value) {
+    return String(value || "").trim().toLowerCase();
 }

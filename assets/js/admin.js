@@ -14,6 +14,10 @@ import {
 import { byId, escapeHtml, formatRupiah } from "./utils.js";
 
 initAdminPage("dashboard", loadDashboard);
+setupDashboardSearch();
+
+let dashboardMenus = [];
+let dashboardOrders = [];
 
 async function loadDashboard(user, partnerProfile) {
     const subtitle = byId("dashboard-subtitle");
@@ -21,18 +25,26 @@ async function loadDashboard(user, partnerProfile) {
 
     try {
         const { menus, orders } = filterDataForPartner(await loadAdminData(), partnerProfile);
+        dashboardMenus = menus;
+        dashboardOrders = orders;
         const storeName = getPrimaryStoreName(menus, orders);
 
         document.title = `RESQ - Dashboard ${storeName}`;
         subtitle.innerText = `Pantau menu surplus, stok, dan pesanan pickup untuk ${storeName}.`;
 
         updateStats(menus, orders);
-        renderRecentOrders(menus, orders);
+        renderRecentOrders(menus, orders, getSearchQuery());
     } catch (error) {
         console.error("Admin dashboard error:", error);
         subtitle.innerText = "Gagal memuat data. Pastikan akun toko punya akses baca ke menu dan pesanan.";
         recentOrdersBody.innerHTML = emptyRow("Gagal memuat data dari Firebase.");
     }
+}
+
+function setupDashboardSearch() {
+    getSearchInput()?.addEventListener("input", () => {
+        renderRecentOrders(dashboardMenus, dashboardOrders, getSearchQuery());
+    });
 }
 
 function updateStats(menus, orders) {
@@ -46,23 +58,27 @@ function updateStats(menus, orders) {
     byId("stat-waiting-pickup").innerText = waitingPickup.length.toLocaleString("id-ID");
 }
 
-function renderRecentOrders(menus, orders) {
+function renderRecentOrders(menus, orders, query = "") {
     const recentOrdersBody = byId("recent-orders-body");
+    const filteredMenus = filterMenus(menus, query);
+    const filteredOrders = filterOrders(orders, query);
 
-    if (!orders.length) {
-        recentOrdersBody.innerHTML = renderMenuFallback(menus);
+    if (!filteredOrders.length) {
+        recentOrdersBody.innerHTML = query
+            ? renderMenuFallback(filteredMenus, `Tidak ada pesanan atau menu yang cocok dengan "${query}".`)
+            : renderMenuFallback(filteredMenus);
         return;
     }
 
-    const recentOrders = [...orders]
+    const recentOrders = [...filteredOrders]
         .sort((a, b) => Number(b.timestamp || 0) - Number(a.timestamp || 0))
         .slice(0, 5);
 
     recentOrdersBody.innerHTML = recentOrders.map(orderRow).join("");
 }
 
-function renderMenuFallback(menus) {
-    if (!menus.length) return emptyRow("Belum ada menu atau pesanan di database.");
+function renderMenuFallback(menus, emptyMessage = "Belum ada menu atau pesanan di database.") {
+    if (!menus.length) return emptyRow(emptyMessage);
 
     return menus.slice(0, 5).map((menu) => {
         const initials = getInitials(menu.restaurantId);
@@ -94,6 +110,40 @@ function renderMenuFallback(menus) {
             </tr>
         `;
     }).join("");
+}
+
+function filterMenus(menus, query) {
+    if (!query) return menus;
+    return menus.filter((menu) => searchableText(menu.name, menu.restaurantId, menu.price, menu.stock).includes(query));
+}
+
+function filterOrders(orders, query) {
+    if (!query) return orders;
+    return orders.filter((order) => searchableText(
+        order.customerEmail,
+        getCustomerName(order.customerEmail),
+        order.productName,
+        order.restaurantId,
+        order.pickupCode,
+        order.status,
+        order.totalPrice
+    ).includes(query));
+}
+
+function getSearchInput() {
+    return document.querySelector('header input[type="search"]');
+}
+
+function getSearchQuery() {
+    return normalizeSearch(getSearchInput()?.value || "");
+}
+
+function searchableText(...values) {
+    return normalizeSearch(values.join(" "));
+}
+
+function normalizeSearch(value) {
+    return String(value || "").trim().toLowerCase();
 }
 
 function orderRow(order) {

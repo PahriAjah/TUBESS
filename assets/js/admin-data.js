@@ -12,6 +12,8 @@ export async function loadAdminData() {
         restaurantId: item.restaurant_id || "Toko belum diatur",
         price: Number(item.surplus_price) || 0,
         stock: Number(item.stock) || 0,
+        imageUrl: item.image_url || item.imageUrl || "",
+        description: item.description || "",
         partnerUid: item.partner_uid || null
     }));
 

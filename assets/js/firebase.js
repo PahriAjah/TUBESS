@@ -17,6 +17,7 @@ import {
     ref,
     get,
     set,
+    update,
     push,
     serverTimestamp
 } from "https://www.gstatic.com/firebasejs/10.11.1/firebase-database.js";
@@ -52,6 +53,7 @@ export {
     ref,
     get,
     set,
+    update,
     push,
     serverTimestamp
 };

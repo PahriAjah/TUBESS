@@ -92,6 +92,7 @@ async function loadMenus() {
                 stock: item.stock,
                 price: item.surplus_price,
                 restaurantId: item.restaurant_id,
+                imageUrl: item.image_url || item.imageUrl || "./assets/burger-signin.png",
                 partnerUid: item.partner_uid || ""
             }));
         });
@@ -108,7 +109,7 @@ function menuCard(item) {
         <article class="flex min-h-[250px] flex-col justify-between rounded-[26px] bg-white p-5 text-resqNavy shadow-lg shadow-slate-950/10">
             <div>
                 <div class="mb-4 flex h-28 items-center justify-center rounded-3xl bg-[#fff8d7]">
-                    <img src="./assets/burger-signin.png" alt="${escapeHtml(item.name)}" class="h-24 w-full object-contain">
+                    <img src="${escapeHtml(item.imageUrl)}" alt="${escapeHtml(item.name)}" class="h-24 w-full object-contain" onerror="this.src='./assets/burger-signin.png'">
                 </div>
                 <h3 class="text-lg font-black text-resqBlue">${escapeHtml(item.name)}</h3>
                 <p class="mt-2 text-xs font-bold text-slate-400">Sisa Porsi: ${escapeHtml(item.stock)}</p>
