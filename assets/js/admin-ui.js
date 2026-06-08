@@ -210,7 +210,7 @@ function badge(color, text) {
 function renderDashboard(data) {
     const stats = [
         { icon: "shopping-bag", label: "Total pesanan", value: data.metrics.totalOrders },
-        { icon: "store", label: "Toko dikelola", value: data.metrics.activeStores },
+        { icon: "shopping-bag", label: "Pesanan aktif", value: data.metrics.activeOrders },
         { icon: "leaf", label: "Makanan terselamatkan", value: data.metrics.savedFood },
         { icon: "wallet", label: "Pendapatan", value: data.metrics.revenue }
     ];

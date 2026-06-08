@@ -10,8 +10,7 @@ import {
 } from "./admin-data.js";
 import { byId } from "./utils.js";
 
-export function initAdminPage(pageKey, onReady) {
-    setupActiveNavigation(pageKey);
+export function initAdminPage(_pageKey, onReady) {
     setupLogout();
     setupNotifications();
 
@@ -29,20 +28,6 @@ export function initAdminPage(pageKey, onReady) {
         renderPartnerProfile(partnerProfile);
         await renderNotifications(partnerProfile);
         await onReady(user, partnerProfile);
-    });
-}
-
-function setupActiveNavigation(pageKey) {
-    document.querySelectorAll("[data-admin-nav]").forEach((link) => {
-        const isActive = link.dataset.adminNav === pageKey;
-
-        link.classList.toggle("bg-slate-200", isActive);
-        link.classList.toggle("text-resqBlue", isActive);
-        link.classList.toggle("text-slate-600", !isActive);
-
-        if (!isActive) {
-            link.classList.add("hover:bg-slate-100");
-        }
     });
 }
 
@@ -85,7 +70,7 @@ function setupNotifications() {
             </div>
             <div id="notification-list" class="max-h-96 overflow-y-auto"></div>
             <div class="border-t border-slate-100 bg-slate-50 px-5 py-3">
-                <a href="admin-orders.html" class="inline-flex text-xs font-black text-resqBlue transition hover:opacity-70">Lihat pesanan aktif</a>
+                <a href="admin.html" class="inline-flex text-xs font-black text-resqBlue transition hover:opacity-70">Lihat pesanan aktif</a>
             </div>
         </section>
     `);
@@ -174,7 +159,7 @@ function buildNotifications(menus, orders) {
             title: "Pesanan menunggu pickup",
             body: `${getCustomerName(order.customerEmail)} memesan ${order.productName}. Kode: ${order.pickupCode}.`,
             time: formatDate(order.timestamp),
-            href: "admin-orders.html",
+            href: "admin.html",
             timestamp: Number(order.timestamp || 0)
         }));
 
@@ -189,7 +174,7 @@ function buildNotifications(menus, orders) {
             title: menu.stock > 0 ? "Stok hampir habis" : "Stok habis",
             body: `${menu.name} tersisa ${menu.stock.toLocaleString("id-ID")} porsi.`,
             time: "Update stok produk",
-            href: "admin-products.html",
+            href: "admin.html",
             timestamp: 1
         }));
 
@@ -204,7 +189,7 @@ function buildNotifications(menus, orders) {
             title: "Pesanan aktif terbaru",
             body: `${order.productName} dari ${getCustomerName(order.customerEmail)} masih aktif.`,
             time: formatDate(order.timestamp),
-            href: "admin-orders.html",
+            href: "admin.html",
             timestamp: Number(order.timestamp || 0)
         }));
 

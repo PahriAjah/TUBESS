@@ -85,13 +85,12 @@ function mergeFirebaseData(baseData, menus, orders) {
     const waitingPickup = orders.filter((order) => isWaitingPickup(order.status));
     const totalStock = menus.reduce((sum, item) => sum + Number(item.stock || 0), 0);
     const revenue = orders.reduce((sum, order) => sum + Number(order.totalPrice || order.total || order.price || 0), 0);
-    const activeStores = new Set(menus.map((menu) => menu.restaurantId).filter(Boolean)).size || baseData.metrics.activeStores;
 
     return {
         ...baseData,
         metrics: {
             totalOrders: orders.length.toLocaleString("id-ID"),
-            activeStores: activeStores.toLocaleString("id-ID"),
+            activeOrders: activeOrders.length.toLocaleString("id-ID"),
             savedFood: totalStock.toLocaleString("id-ID"),
             revenue: revenue ? compactRupiah(revenue) : baseData.metrics.revenue
         },
@@ -105,11 +104,13 @@ function mergeFirebaseData(baseData, menus, orders) {
             { icon: "package-check", label: "Stok tersedia", value: totalStock.toLocaleString("id-ID") },
             { icon: "alert-triangle", label: "Hampir habis", value: menus.filter((menu) => Number(menu.stock || 0) > 0 && Number(menu.stock || 0) <= 5).length.toLocaleString("id-ID") },
             { icon: "calendar-clock", label: "Expired hari ini", value: baseData.inventoryStats[2].value },
-            { icon: "store", label: "Toko dikelola", value: activeStores.toLocaleString("id-ID") }
+            { icon: "shopping-bag", label: "Pesanan aktif", value: activeOrders.length.toLocaleString("id-ID") }
         ],
+        customerStats: buildCustomerStats(orders),
         orders: orders.length ? orders.slice(0, 8).map(orderToView) : baseData.orders,
         inventory: menus.length ? menus.slice(0, 8).map(menuToInventoryView) : baseData.inventory,
         products: menus.length ? menus.slice(0, 8).map(menuToProductView) : baseData.products,
+        customers: buildCustomers(orders),
         activities: orders.length ? orders.slice(0, 4).map((order) => ({
             icon: "shopping-bag",
             title: `Pesanan ${order.id ? `#${order.id}` : "baru"}`,
@@ -160,6 +161,83 @@ function menuToProductView(menu) {
     };
 }
 
+function buildCustomerStats(orders) {
+    const customerGroups = groupOrdersByCustomer(orders);
+    const totalCustomers = customerGroups.length;
+    const repeatCustomers = customerGroups.filter((customer) => customer.orders.length > 1).length;
+    const newCustomers = customerGroups.filter((customer) => isRecentTimestamp(customer.latestTimestamp)).length;
+    const repeatRate = totalCustomers ? `${Math.round((repeatCustomers / totalCustomers) * 100)}%` : "0%";
+
+    return [
+        { icon: "users", label: "Total pelanggan", value: totalCustomers.toLocaleString("id-ID") },
+        { icon: "user-plus", label: "Pelanggan baru", value: newCustomers.toLocaleString("id-ID") },
+        { icon: "repeat", label: "Repeat order", value: repeatRate },
+        { icon: "star", label: "Rating rata-rata", value: "-" }
+    ];
+}
+
+function buildCustomers(orders) {
+    return groupOrdersByCustomer(orders)
+        .sort((a, b) => Number(b.latestTimestamp || 0) - Number(a.latestTimestamp || 0))
+        .map((customer) => ({
+            name: getCustomerName(customer.email),
+            initials: getInitials(customer.email),
+            sub: customer.lastProduct || "Pelanggan RESQ",
+            email: customer.email,
+            orders: customer.orders.length.toLocaleString("id-ID"),
+            lastActive: formatRelativeDate(customer.latestTimestamp),
+            status: "Aktif",
+            statusColor: "green"
+        }));
+}
+
+function groupOrdersByCustomer(orders) {
+    const groups = new Map();
+
+    orders.forEach((order) => {
+        const email = String(order.customerEmail || "").trim().toLowerCase();
+        if (!email) return;
+
+        const existing = groups.get(email) || {
+            email,
+            orders: [],
+            latestTimestamp: 0,
+            lastProduct: ""
+        };
+        const timestamp = Number(order.timestamp || 0);
+
+        existing.orders.push(order);
+        if (timestamp >= Number(existing.latestTimestamp || 0)) {
+            existing.latestTimestamp = timestamp;
+            existing.lastProduct = order.productName || order.menuName || "Produk surplus";
+        }
+
+        groups.set(email, existing);
+    });
+
+    return [...groups.values()];
+}
+
+function isRecentTimestamp(timestamp) {
+    const value = Number(timestamp || 0);
+    if (!value) return false;
+
+    const sevenDays = 7 * 24 * 60 * 60 * 1000;
+    return Date.now() - value <= sevenDays;
+}
+
+function formatRelativeDate(timestamp) {
+    const value = Number(timestamp || 0);
+    if (!value) return "-";
+
+    const diff = Date.now() - value;
+    const day = 24 * 60 * 60 * 1000;
+
+    if (diff < day) return "Hari ini";
+    if (diff < day * 2) return "Kemarin";
+    return `${Math.max(1, Math.floor(diff / day))} hari lalu`;
+}
+
 function statusColor(status) {
     const normalized = String(status || "").toLowerCase();
     if (normalized.includes("selesai") || normalized.includes("complete") || normalized.includes("picked")) return "green";
@@ -188,7 +266,7 @@ function staticAdminData() {
     return {
         metrics: {
             totalOrders: "579",
-            activeStores: "3",
+            activeOrders: "24",
             savedFood: "1.247",
             revenue: "Rp 18,4jt"
         },
