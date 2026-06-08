@@ -1,5 +1,5 @@
 import { auth, realtimeDb, signOut, ref, get, push, serverTimestamp } from "./firebase.js";
-import { requireAuth } from "./auth-flow.js";
+import { isPartnerAccount, requireAuth } from "./auth-flow.js";
 import { byId, escapeHtml, formatRupiah } from "./utils.js";
 
 const menuContainer = byId("daftar-menu");
@@ -15,7 +15,12 @@ const confirmButton = byId("btn-konfirmasi");
 let selectedMenu = null;
 let userEmail = "Guest";
 
-requireAuth((user) => {
+requireAuth(async (user) => {
+    if (await isPartnerAccount(user)) {
+        window.location.href = "admin.html";
+        return;
+    }
+
     userEmail = user.email;
     userName.innerText = "Halo, " + user.email.split("@")[0] + "!";
     profile.classList.remove("hidden");

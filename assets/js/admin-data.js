@@ -12,8 +12,10 @@ export async function loadAdminData() {
         restaurantId: item.restaurant_id || "Toko belum diatur",
         price: Number(item.surplus_price) || 0,
         stock: Number(item.stock) || 0,
-        imageUrl: item.image_url || item.imageUrl || "",
         description: item.description || "",
+        image: item.image_url || item.image || "",
+        imageUrl: item.image_url || item.imageUrl || item.image || "",
+        updatedAt: item.updated_at || item.created_at || null,
         partnerUid: item.partner_uid || null
     }));
 
@@ -21,9 +23,13 @@ export async function loadAdminData() {
         id: item.id,
         customerEmail: item.customer_email || "customer@resq.com",
         productName: item.product_name || "Menu tidak diketahui",
+        menuName: item.product_name || "Menu tidak diketahui",
+        productId: item.product_id || null,
         restaurantId: item.restaurant_id || "Toko belum diatur",
         totalPrice: Number(item.total_price) || 0,
+        total: Number(item.total_price) || 0,
         pickupCode: item.pickup_code || "-",
+        pickupTime: item.pickup_time || item.pickup_code || "-",
         paymentMethod: item.payment_method || "-",
         status: item.status || "Menunggu Pengambilan",
         timestamp: item.timestamp || null,

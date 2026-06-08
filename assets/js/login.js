@@ -1,8 +1,14 @@
-import { auth, googleProvider, signInWithEmailAndPassword, signInWithPopup } from "./firebase.js";
+import { auth, googleProvider, signInWithEmailAndPassword, signInWithPopup, signOut } from "./firebase.js";
 import { getUserHomePage, redirectWhenLoggedIn } from "./auth-flow.js";
 import { byId, setError } from "./utils.js";
 
-redirectWhenLoggedIn("app.html");
+const forceFreshLogin = new URLSearchParams(window.location.search).get("fresh") === "1";
+
+if (forceFreshLogin) {
+    signOut(auth).catch((error) => console.error("Fresh login sign out error:", error));
+} else {
+    redirectWhenLoggedIn("app.html");
+}
 
 const emailInput = byId("email");
 const passwordInput = byId("password");
@@ -31,7 +37,7 @@ loginButton?.addEventListener("click", async () => {
         setError(errorText, "Kredensial tidak valid. Silakan coba lagi.");
     } finally {
         loginButton.disabled = false;
-        loginButton.innerText = "Login";
+        loginButton.innerText = "Masuk";
     }
 });
 
