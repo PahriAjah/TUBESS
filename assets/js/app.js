@@ -18,6 +18,9 @@ const totalStockStat = byId("stat-stock");
 const totalOrdersStat = byId("stat-orders");
 const savedFoodStat = byId("stat-saved");
 const readyOrdersStat = byId("stat-ready");
+const impactCo2 = byId("impact-co2");
+const impactWater = byId("impact-water");
+const impactPoints = byId("impact-points");
 const orderList = byId("daftar-pesanan");
 const latestMenuContainer = byId("latest-menu");
 const recommendationContainer = byId("rekomendasi-menu");
@@ -495,6 +498,10 @@ function updateStats() {
     animateNumber(totalOrdersStat, userOrders.length);
     animateNumber(savedFoodStat, savedOrders);
     animateNumber(readyOrdersStat, readyOrders);
+
+    animateNumber(impactCo2, savedOrders * 2.5);
+    animateNumber(impactWater, savedOrders * 150);
+    animateNumber(impactPoints, savedOrders * 50);
 }
 
 function selectMenu(item) {
