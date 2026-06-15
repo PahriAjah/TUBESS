@@ -51,6 +51,7 @@ let userEmail = "Guest";
 let menus = [];
 let userOrders = [];
 let toastTimer = null;
+let resqMap = null;
 
 requireAuth(async (user) => {
     if (await isPartnerAccount(user)) {
@@ -410,6 +411,10 @@ function activateScreen(target) {
     byId("mobile-menu")?.classList.remove("flex");
     window.scrollTo({ top: 0, behavior: "smooth" });
     window.lucide?.createIcons();
+
+    if (target === "peta") {
+        setTimeout(initMap, 300);
+    }
 }
 
 function normalizeCategory(value = "") {
@@ -554,4 +559,60 @@ function hashString(value) {
         hash = ((hash << 5) - hash + value.charCodeAt(i)) | 0;
     }
     return Math.abs(hash);
+}
+
+function initMap() {
+    if (!byId("resq-map")) return;
+    
+    if (!resqMap) {
+        resqMap = L.map("resq-map").setView([-6.9147, 107.6098], 13);
+        
+        L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
+            attribution: '&copy; OpenStreetMap &copy; CARTO',
+            subdomains: 'abcd',
+            maxZoom: 19
+        }).addTo(resqMap);
+        
+        const resqIcon = L.divIcon({
+            className: 'custom-div-icon',
+            html: `<div style="background-color: #FACC15; width: 32px; height: 32px; border-radius: 50%; border: 3px solid #011837; box-shadow: 0 4px 6px rgba(0,0,0,0.3); display: flex; align-items: center; justify-content: center;"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#011837" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 2v7c0 1.1.9 2 2 2h4a2 2 0 0 0 2-2V2"/><path d="M7 2v20"/><path d="M21 15V2v0a5 5 0 0 0-5 5v6c0 1.1.9 2 2 2h3Zm0 0v7"/></svg></div>`,
+            iconSize: [32, 32],
+            iconAnchor: [16, 16],
+            popupAnchor: [0, -16]
+        });
+
+        const uniquePartners = [...new Set(menus.map(m => m.restaurantId))];
+        
+        uniquePartners.forEach((partner, i) => {
+            const partnerMenus = menus.filter(m => m.restaurantId === partner && m.stock > 0);
+            if (partnerMenus.length === 0) return;
+            
+            const lat = -6.9147 + (Math.sin(i * 1.5) * 0.02);
+            const lng = 107.6098 + (Math.cos(i * 1.5) * 0.02);
+            
+            const marker = L.marker([lat, lng], {icon: resqIcon}).addTo(resqMap);
+            
+            let popupContent = `<div class="p-1 min-w-[200px]">
+                <h4 class="font-black text-[#011837] text-sm">${escapeHtml(partner)}</h4>
+                <p class="text-xs font-semibold text-slate-500 mb-2">${partnerMenus.length} menu surplus</p>
+                <div class="space-y-2 mt-2 border-t border-slate-200 pt-2">`;
+                
+            partnerMenus.slice(0, 2).forEach(m => {
+                popupContent += `<div class="flex justify-between items-center text-xs">
+                    <span class="truncate font-semibold max-w-[120px]">${escapeHtml(m.name)}</span>
+                    <span class="font-black text-emerald-600 ml-2">${formatRupiah(m.price)}</span>
+                </div>`;
+            });
+            
+            if (partnerMenus.length > 2) {
+                popupContent += `<p class="text-[10px] text-center text-slate-400 mt-2">Dan ${partnerMenus.length - 2} menu lainnya...</p>`;
+            }
+            
+            popupContent += `</div><button onclick="document.querySelector('[data-target=\\'makanan\\']').click(); setTimeout(() => { document.getElementById('input-cari').value = '${escapeHtml(partner)}'; document.getElementById('input-cari').dispatchEvent(new Event('input')); }, 100);" class="mt-3 w-full bg-[#FACC15] text-[#011837] text-xs font-black py-2 rounded-lg transition hover:bg-yellow-400">Pesan Sekarang</button></div>`;
+            
+            marker.bindPopup(popupContent);
+        });
+    }
+    
+    resqMap.invalidateSize();
 }

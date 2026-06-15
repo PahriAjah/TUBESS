@@ -7,6 +7,8 @@
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script src="./assets/js/tailwind-config.js"></script>
     <link rel="stylesheet" href="./assets/css/main.css">
 </head>
@@ -39,6 +41,10 @@
                 <button data-target="makanan" class="app-nav flex w-full items-center gap-3 rounded-xl px-4 py-3 text-left text-sm font-semibold text-slate-600 transition hover:bg-slate-50">
                     <i data-lucide="utensils" class="h-5 w-5"></i>
                     <span>Makanan Tersedia</span>
+                </button>
+                <button data-target="peta" class="app-nav flex w-full items-center gap-3 rounded-xl px-4 py-3 text-left text-sm font-semibold text-slate-600 transition hover:bg-slate-50">
+                    <i data-lucide="map" class="h-5 w-5"></i>
+                    <span>Peta Lokasi</span>
                 </button>
                 <button data-target="pesanan" class="app-nav flex w-full items-center gap-3 rounded-xl px-4 py-3 text-left text-sm font-semibold text-slate-600 transition hover:bg-slate-50">
                     <i data-lucide="shopping-bag" class="h-5 w-5"></i>
@@ -79,6 +85,7 @@
                 <nav id="mobile-menu" class="mt-4 hidden gap-2 overflow-x-auto pb-1">
                     <button data-target="dashboard" class="app-nav nav-active flex shrink-0 items-center gap-2 rounded-xl px-3 py-2 text-xs font-bold"><i data-lucide="layout-dashboard" class="h-4 w-4"></i><span>Dashboard</span></button>
                     <button data-target="makanan" class="app-nav flex shrink-0 items-center gap-2 rounded-xl px-3 py-2 text-xs font-bold text-slate-600"><i data-lucide="utensils" class="h-4 w-4"></i><span>Makanan</span></button>
+                    <button data-target="peta" class="app-nav flex shrink-0 items-center gap-2 rounded-xl px-3 py-2 text-xs font-bold text-slate-600"><i data-lucide="map" class="h-4 w-4"></i><span>Peta Lokasi</span></button>
                     <button data-target="pesanan" class="app-nav flex shrink-0 items-center gap-2 rounded-xl px-3 py-2 text-xs font-bold text-slate-600"><i data-lucide="shopping-bag" class="h-4 w-4"></i><span>Pesanan</span></button>
                     <button data-target="profil" class="app-nav flex shrink-0 items-center gap-2 rounded-xl px-3 py-2 text-xs font-bold text-slate-600"><i data-lucide="user-round" class="h-4 w-4"></i><span>Profil</span></button>
                 </nav>
@@ -201,6 +208,16 @@
                             <div class="skeleton-card md:col-span-2 xl:col-span-3"></div>
                         </div>
                     </section>
+                </section>
+
+                <section id="peta" class="app-screen">
+                    <div class="mb-8">
+                        <h1 class="text-4xl font-black tracking-tight text-resqBlue">Peta Lokasi</h1>
+                        <p class="mt-3 text-sm font-medium text-slate-500">Temukan makanan surplus dari mitra di sekitarmu dengan mudah.</p>
+                    </div>
+                    <div class="rounded-xl border border-slate-200 bg-white p-2 shadow-sm">
+                        <div id="resq-map" class="h-[550px] w-full rounded-lg z-0"></div>
+                    </div>
                 </section>
 
                 <section id="pesanan" class="app-screen">
