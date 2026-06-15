@@ -190,18 +190,42 @@
                                 <i data-lucide="search" class="pointer-events-none absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-slate-400"></i>
                                 <input id="input-cari" type="search" placeholder="Cari menu atau mitra..." class="h-12 w-full rounded-xl border border-slate-200 bg-slate-50 pl-12 pr-4 text-sm font-semibold outline-none transition focus:border-resqBlue focus:bg-white">
                             </label>
-                            <select id="filter-kategori" class="h-12 rounded-xl border border-slate-200 bg-white px-4 text-sm font-bold text-resqBlue outline-none focus:border-resqBlue">
-                                <option value="all">Semua kategori</option>
-                                <option value="Ready Meal">Ready Meal</option>
-                                <option value="Bakery">Bakery</option>
-                                <option value="Sayur & Buah">Sayur & Buah</option>
-                                <option value="Dairy">Dairy</option>
-                            </select>
-                            <select id="filter-stok" class="h-12 rounded-xl border border-slate-200 bg-white px-4 text-sm font-bold text-resqBlue outline-none focus:border-resqBlue">
-                                <option value="all">Semua stok</option>
-                                <option value="available">Tersedia</option>
-                                <option value="low">Hampir habis</option>
-                            </select>
+                            <div class="filter-dropdown" data-filter-dropdown>
+                                <select id="filter-kategori" class="native-filter-select" aria-label="Filter kategori">
+                                    <option value="all">Semua kategori</option>
+                                    <option value="Ready Meal">Ready Meal</option>
+                                    <option value="Bakery">Bakery</option>
+                                    <option value="Sayur & Buah">Sayur & Buah</option>
+                                    <option value="Dairy">Dairy</option>
+                                </select>
+                                <button type="button" class="filter-trigger" aria-haspopup="listbox" aria-expanded="false">
+                                    <span class="filter-trigger-text">Semua kategori</span>
+                                    <i data-lucide="chevron-down" class="filter-chevron h-5 w-5"></i>
+                                </button>
+                                <div class="filter-menu" role="listbox">
+                                    <button type="button" class="filter-option is-selected" data-value="all" role="option" aria-selected="true">Semua kategori</button>
+                                    <button type="button" class="filter-option" data-value="Ready Meal" role="option">Ready Meal</button>
+                                    <button type="button" class="filter-option" data-value="Bakery" role="option">Bakery</button>
+                                    <button type="button" class="filter-option" data-value="Sayur & Buah" role="option">Sayur & Buah</button>
+                                    <button type="button" class="filter-option" data-value="Dairy" role="option">Dairy</button>
+                                </div>
+                            </div>
+                            <div class="filter-dropdown" data-filter-dropdown>
+                                <select id="filter-stok" class="native-filter-select" aria-label="Filter stok">
+                                    <option value="all">Semua stok</option>
+                                    <option value="available">Tersedia</option>
+                                    <option value="low">Hampir habis</option>
+                                </select>
+                                <button type="button" class="filter-trigger" aria-haspopup="listbox" aria-expanded="false">
+                                    <span class="filter-trigger-text">Semua stok</span>
+                                    <i data-lucide="chevron-down" class="filter-chevron h-5 w-5"></i>
+                                </button>
+                                <div class="filter-menu" role="listbox">
+                                    <button type="button" class="filter-option is-selected" data-value="all" role="option" aria-selected="true">Semua stok</button>
+                                    <button type="button" class="filter-option" data-value="available" role="option">Tersedia</button>
+                                    <button type="button" class="filter-option" data-value="low" role="option">Hampir habis</button>
+                                </div>
+                            </div>
                             <button id="btn-reset-filter" class="motion-button h-12 rounded-xl bg-slate-100 px-5 text-sm font-black text-resqBlue transition hover:bg-slate-200">Reset</button>
                         </div>
                     </section>

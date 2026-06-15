@@ -92,11 +92,14 @@ logoutButton?.addEventListener("click", async () => {
 searchInput?.addEventListener("input", renderMenus);
 categoryFilter?.addEventListener("change", renderMenus);
 stockFilter?.addEventListener("change", renderMenus);
+initFilterDropdowns();
 
 resetFilterButton?.addEventListener("click", () => {
     searchInput.value = "";
     categoryFilter.value = "all";
     stockFilter.value = "all";
+    syncFilterDropdown(categoryFilter);
+    syncFilterDropdown(stockFilter);
     renderMenus();
 });
 
@@ -377,6 +380,68 @@ function renderMenus() {
         : emptyState("Menu tidak ditemukan. Coba ubah kata kunci atau filter.");
     
     window.lucide?.createIcons();
+}
+
+function initFilterDropdowns() {
+    const dropdowns = document.querySelectorAll("[data-filter-dropdown]");
+    if (!dropdowns.length) return;
+
+    const closeAll = (except = null) => {
+        dropdowns.forEach((dropdown) => {
+            if (dropdown === except) return;
+            dropdown.classList.remove("is-open");
+            dropdown.querySelector(".filter-trigger")?.setAttribute("aria-expanded", "false");
+        });
+    };
+
+    dropdowns.forEach((dropdown) => {
+        const select = dropdown.querySelector("select");
+        const trigger = dropdown.querySelector(".filter-trigger");
+        const options = dropdown.querySelectorAll(".filter-option");
+        if (!select || !trigger || !options.length) return;
+
+        trigger.addEventListener("click", () => {
+            const willOpen = !dropdown.classList.contains("is-open");
+            closeAll(dropdown);
+            dropdown.classList.toggle("is-open", willOpen);
+            trigger.setAttribute("aria-expanded", String(willOpen));
+        });
+
+        options.forEach((option) => {
+            option.addEventListener("click", () => {
+                select.value = option.dataset.value || "all";
+                syncFilterDropdown(select);
+                select.dispatchEvent(new Event("change", { bubbles: true }));
+                closeAll();
+            });
+        });
+
+        select.addEventListener("change", () => syncFilterDropdown(select));
+        syncFilterDropdown(select);
+    });
+
+    document.addEventListener("click", (event) => {
+        if (!event.target.closest("[data-filter-dropdown]")) closeAll();
+    });
+
+    document.addEventListener("keydown", (event) => {
+        if (event.key === "Escape") closeAll();
+    });
+}
+
+function syncFilterDropdown(select) {
+    if (!select) return;
+
+    const dropdown = select.closest("[data-filter-dropdown]");
+    const label = dropdown?.querySelector(".filter-trigger-text");
+    const selectedOption = select.options[select.selectedIndex];
+    if (label && selectedOption) label.innerText = selectedOption.text;
+
+    dropdown?.querySelectorAll(".filter-option").forEach((option) => {
+        const isSelected = option.dataset.value === select.value;
+        option.classList.toggle("is-selected", isSelected);
+        option.setAttribute("aria-selected", String(isSelected));
+    });
 }
 
 function renderFavorites() {
