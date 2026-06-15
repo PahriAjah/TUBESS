@@ -47,13 +47,20 @@ body {
 }
 
 .app-nav.nav-active {
-    background: #111827;
-    color: #ffffff;
+    background: #111827 !important;
+    color: #ffffff !important;
     box-shadow: 0 12px 26px rgba(17, 24, 39, .14);
 }
 
+.app-nav.nav-active:hover {
+    background: #111827 !important;
+    color: #ffffff !important;
+}
+
 .app-nav:not(.nav-active):hover {
-    color: #111827;
+    background: #fff7d6 !important;
+    color: #011837;
+    box-shadow: 0 10px 22px rgba(15, 23, 42, .06);
 }
 
 .metric-card {
