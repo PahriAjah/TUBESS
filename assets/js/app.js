@@ -45,6 +45,7 @@ const qrisDemoAmount = byId("qris-demo-amount");
 const toast = byId("toast");
 const toastTitle = byId("toast-title");
 const toastMessage = byId("toast-message");
+const btnMyLocation = byId("btn-my-location");
 
 const modalUlasan = byId("modal-ulasan");
 const btnTutupUlasan = byId("btn-tutup-ulasan");
@@ -58,6 +59,8 @@ let menus = [];
 let userOrders = [];
 let toastTimer = null;
 let resqMap = null;
+let userLocation = null;
+let userMarker = null;
 let favoriteIds = new Set();
 
 requireAuth(async (user) => {
@@ -101,7 +104,7 @@ resetFilterButton?.addEventListener("click", () => {
     const button = event.target.closest("[data-order]");
     if (!button) return;
 
-    const item = menus.find((menu) => menu.id === button.dataset.id);
+    const item = menus.find((menu) => menu.id === button.dataset.id || menu.id === button.dataset.order);
     if (!item) return;
 
     selectMenu(item);
@@ -160,6 +163,52 @@ document.addEventListener("click", (event) => {
         modalUlasan?.classList.remove("hidden");
         modalUlasan?.classList.add("flex");
         return;
+    }
+});
+
+btnMyLocation?.addEventListener("click", () => {
+    if (navigator.geolocation) {
+        const icon = btnMyLocation.querySelector("i");
+        icon?.classList.add("animate-pulse", "text-resqYellow");
+        navigator.geolocation.getCurrentPosition(
+            (position) => {
+                icon?.classList.remove("animate-pulse", "text-resqYellow");
+                userLocation = {
+                    lat: position.coords.latitude,
+                    lng: position.coords.longitude
+                };
+                
+                if (resqMap) {
+                    resqMap.setView([userLocation.lat, userLocation.lng], 14);
+                    if (userMarker) {
+                        userMarker.setLatLng([userLocation.lat, userLocation.lng]);
+                    } else {
+                        const userIcon = L.divIcon({
+                            className: 'custom-user-icon',
+                            html: `<div style="background-color: #3B82F6; width: 16px; height: 16px; border-radius: 50%; border: 3px solid white; box-shadow: 0 0 0 2px #3B82F6, 0 4px 6px rgba(0,0,0,0.3);"></div>`,
+                            iconSize: [16, 16],
+                            iconAnchor: [8, 8]
+                        });
+                        userMarker = L.marker([userLocation.lat, userLocation.lng], {icon: userIcon, zIndexOffset: 1000}).addTo(resqMap);
+                        userMarker.bindPopup('<b class="text-sm font-black text-resqBlue">Lokasi Kamu</b>').openPopup();
+                    }
+                }
+                
+                menus.forEach(m => {
+                    m.distance = calculateDistance(userLocation.lat, userLocation.lng, m.lat, m.lng);
+                });
+                
+                renderMenus();
+                renderDashboardMenus();
+                renderFavorites();
+            },
+            (error) => {
+                icon?.classList.remove("animate-pulse", "text-resqYellow");
+                showToast("Lokasi Gagal", "Tidak dapat mengambil lokasi. Periksa izin GPS.");
+            }
+        );
+    } else {
+        showToast("Error", "Browser Anda tidak mendukung geolokasi.");
     }
 });
 
@@ -235,19 +284,32 @@ confirmButton?.addEventListener("click", async () => {
 async function loadMenus() {
     try {
         const snapshot = await get(ref(realtimeDb, "menus"));
-        menus = [];
+        const data = [];
 
         snapshot.forEach((childSnapshot) => {
-            const item = childSnapshot.val();
+            data.push({ id: childSnapshot.key, ...childSnapshot.val() });
+        });
+
+        const uniquePartners = [...new Set(data.map(item => item.restaurant_id || "Partner RESQ"))];
+        
+        menus = [];
+        data.forEach((item) => {
+            const partner = item.restaurant_id || "Partner RESQ";
+            const i = uniquePartners.indexOf(partner);
+            const lat = -6.9147 + (Math.sin(i * 1.5) * 0.02);
+            const lng = 107.6098 + (Math.cos(i * 1.5) * 0.02);
+            
             menus.push({
-                id: childSnapshot.key,
+                id: item.id,
                 name: item.name || "Menu RESQ",
                 stock: Number(item.stock) || 0,
                 price: Number(item.surplus_price) || 0,
-                restaurantId: item.restaurant_id || "Partner RESQ",
+                restaurantId: partner,
                 category: normalizeCategory(item.category || item.kategori || item.type || item.name),
                 imageUrl: item.image_url || item.imageUrl || "./assets/burger-signin.png",
-                partnerUid: item.partner_uid || ""
+                partnerUid: item.partner_uid || "",
+                lat: lat,
+                lng: lng
             });
         });
 
@@ -406,32 +468,33 @@ function menuCard(item, index = 0) {
     const stockLabel = disabled ? "Stok habis" : `${item.stock} porsi`;
     const stockClass = disabled ? "bg-red-50 text-red-600" : item.stock <= 3 ? "bg-yellow-100 text-resqBlue" : "bg-emerald-50 text-emerald-700";
     const delay = Math.min(index * 55, 330);
+
+    const distanceHtml = userLocation && item.distance !== undefined
+        ? `<div class="mt-2 flex items-center gap-1 text-[11px] font-bold text-slate-500"><i data-lucide="navigation" class="h-3 w-3 text-resqBlue"></i> ${item.distance.toFixed(1)} km dari lokasimu</div>`
+        : '';
+
     const isFav = favoriteIds.has(item.id);
     const heartColor = isFav ? "text-red-500" : "text-slate-400";
     const heartFill = isFav ? "fill-current" : "";
 
     return `
         <article class="menu-card flex min-h-[330px] flex-col rounded-[24px] border border-slate-200 bg-white p-4 shadow-sm" style="animation-delay:${delay}ms">
-            <div class="relative rounded-[20px] bg-[#fff8d7] p-4">
-                <button data-favorite="${escapeHtml(item.id)}" class="absolute left-3 top-3 z-10 rounded-full bg-white/80 p-2 ${heartColor} backdrop-blur transition hover:text-red-500 hover:scale-110">
+            <div class="relative flex h-40 shrink-0 items-center justify-center overflow-hidden rounded-2xl bg-slate-50 p-4">
+                <button data-favorite="${escapeHtml(item.id)}" class="absolute left-3 top-3 z-10 rounded-full bg-white/80 p-2 ${heartColor} backdrop-blur transition hover:text-red-500 hover:scale-110" aria-label="Favorit">
                     <i data-lucide="heart" class="h-4 w-4 ${heartFill}"></i>
                 </button>
                 <img src="${escapeHtml(item.imageUrl)}" alt="${escapeHtml(item.name)}" class="h-36 w-full object-contain transition duration-300 hover:scale-105" onerror="this.src='./assets/burger-signin.png'">
                 <span class="absolute right-3 top-3 rounded-full px-3 py-1 text-[11px] font-black ${stockClass}">${escapeHtml(stockLabel)}</span>
             </div>
-            <div class="flex flex-1 flex-col pt-4">
-                <p class="text-xs font-bold uppercase tracking-[.16em] text-slate-400">${escapeHtml(item.restaurantId)}</p>
-                <h3 class="mt-1 line-clamp-2 text-lg font-black leading-snug text-resqBlue">${escapeHtml(item.name)}</h3>
-                <p class="mt-2 text-xs font-bold text-slate-400">${escapeHtml(item.category)}</p>
-                <div class="mt-auto flex items-center justify-between gap-3 pt-5">
-                    <span class="text-lg font-black text-resqBlue">${formatRupiah(item.price)}</span>
-                    <button
-                        data-order
-                        data-id="${escapeHtml(item.id)}"
-                        ${disabled ? "disabled" : ""}
-                        class="motion-button rounded-2xl bg-resqYellow px-5 py-2.5 text-sm font-black text-resqNavy transition hover:bg-yellow-400 disabled:cursor-not-allowed disabled:bg-slate-200 disabled:text-slate-400">
-                        ${disabled ? "Habis" : "Pesan"}
-                    </button>
+            <div class="flex flex-1 flex-col justify-between mt-4">
+                <div>
+                    <p class="text-[10px] font-black uppercase tracking-wider text-slate-400">${escapeHtml(item.category)} &middot; ${escapeHtml(item.restaurantId)}</p>
+                    <h3 class="mt-1 text-lg font-black leading-snug text-resqBlue">${escapeHtml(item.name)}</h3>
+                    ${distanceHtml}
+                </div>
+                <div class="mt-4 flex items-center justify-between border-t border-slate-100 pt-3">
+                    <span class="text-xl font-black text-emerald-600">${formatRupiah(item.price)}</span>
+                    <button data-order="${escapeHtml(item.id)}" class="motion-button grid h-10 place-items-center rounded-xl bg-resqYellow px-4 text-sm font-black text-resqNavy transition hover:bg-yellow-400 disabled:opacity-50" ${disabled ? "disabled" : ""}>Pilih</button>
                 </div>
             </div>
         </article>
@@ -672,12 +735,12 @@ function initMap() {
 
         const uniquePartners = [...new Set(menus.map(m => m.restaurantId))];
         
-        uniquePartners.forEach((partner, i) => {
+        uniquePartners.forEach((partner) => {
             const partnerMenus = menus.filter(m => m.restaurantId === partner && m.stock > 0);
             if (partnerMenus.length === 0) return;
             
-            const lat = -6.9147 + (Math.sin(i * 1.5) * 0.02);
-            const lng = 107.6098 + (Math.cos(i * 1.5) * 0.02);
+            const lat = partnerMenus[0].lat;
+            const lng = partnerMenus[0].lng;
             
             const marker = L.marker([lat, lng], {icon: resqIcon}).addTo(resqMap);
             
@@ -704,4 +767,15 @@ function initMap() {
     }
     
     resqMap.invalidateSize();
+}
+
+function calculateDistance(lat1, lon1, lat2, lon2) {
+    const R = 6371; // Radius of the earth in km
+    const dLat = (lat2 - lat1) * Math.PI / 180;
+    const dLon = (lon2 - lon1) * Math.PI / 180;
+    const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
+              Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+              Math.sin(dLon/2) * Math.sin(dLon/2);
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+    return R * c;
 }
