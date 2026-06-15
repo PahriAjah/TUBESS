@@ -46,12 +46,19 @@ const toast = byId("toast");
 const toastTitle = byId("toast-title");
 const toastMessage = byId("toast-message");
 
+const modalUlasan = byId("modal-ulasan");
+const btnTutupUlasan = byId("btn-tutup-ulasan");
+const btnKirimUlasan = byId("btn-kirim-ulasan");
+const ratingStars = document.querySelectorAll("#rating-stars button");
+const ulasanTeks = byId("ulasan-teks");
+
 let selectedMenu = null;
 let userEmail = "Guest";
 let menus = [];
 let userOrders = [];
 let toastTimer = null;
 let resqMap = null;
+let favoriteIds = new Set();
 
 requireAuth(async (user) => {
     if (await isPartnerAccount(user)) {
@@ -128,6 +135,62 @@ paymentMethod?.addEventListener("change", updatePaymentPreview);
 
 modal?.addEventListener("click", (event) => {
     if (event.target === modal) closeModal();
+});
+
+document.addEventListener("click", (event) => {
+    const btnFav = event.target.closest("[data-favorite]");
+    if (btnFav) {
+        event.stopPropagation();
+        const id = btnFav.dataset.favorite;
+        if (favoriteIds.has(id)) {
+            favoriteIds.delete(id);
+            showToast("Favorit", "Dihapus dari favorit.");
+        } else {
+            favoriteIds.add(id);
+            showToast("Favorit", "Ditambahkan ke favorit.");
+        }
+        renderMenus();
+        renderDashboardMenus();
+        renderFavorites();
+        return;
+    }
+
+    const btnUlasan = event.target.closest("[data-ulasan]");
+    if (btnUlasan) {
+        modalUlasan?.classList.remove("hidden");
+        modalUlasan?.classList.add("flex");
+        return;
+    }
+});
+
+btnTutupUlasan?.addEventListener("click", () => {
+    modalUlasan?.classList.add("hidden");
+    modalUlasan?.classList.remove("flex");
+});
+
+let currentRating = 0;
+ratingStars?.forEach((star, index) => {
+    star.addEventListener("click", () => {
+        currentRating = index + 1;
+        ratingStars.forEach((s, i) => {
+            s.classList.toggle("text-resqYellow", i < currentRating);
+            s.classList.toggle("text-slate-300", i >= currentRating);
+            s.querySelector("svg")?.classList.toggle("fill-current", i < currentRating);
+        });
+    });
+});
+
+btnKirimUlasan?.addEventListener("click", () => {
+    modalUlasan?.classList.add("hidden");
+    modalUlasan?.classList.remove("flex");
+    showToast("Ulasan Terkirim", "Terima kasih atas ulasannya!");
+    if (ulasanTeks) ulasanTeks.value = "";
+    currentRating = 0;
+    ratingStars?.forEach(s => {
+        s.classList.remove("text-resqYellow");
+        s.classList.add("text-slate-300");
+        s.querySelector("svg")?.classList.remove("fill-current");
+    });
 });
 
 confirmButton?.addEventListener("click", async () => {
@@ -250,6 +313,23 @@ function renderMenus() {
     menuContainer.innerHTML = filteredMenus.length
         ? filteredMenus.map((item, index) => menuCard(item, index)).join("")
         : emptyState("Menu tidak ditemukan. Coba ubah kata kunci atau filter.");
+    
+    window.lucide?.createIcons();
+}
+
+function renderFavorites() {
+    const favContainer = byId("daftar-favorit");
+    if (!favContainer) return;
+    const favs = menus.filter(m => favoriteIds.has(m.id));
+    if (favs.length === 0) {
+        favContainer.innerHTML = `<div class="rounded-[22px] bg-slate-50 p-8 text-center md:col-span-2 xl:col-span-3">
+            <i data-lucide="heart" class="mx-auto h-12 w-12 text-slate-300"></i>
+            <p class="mt-4 text-sm font-bold text-slate-500">Belum ada item favorit.</p>
+        </div>`;
+    } else {
+        favContainer.innerHTML = favs.map((item, index) => menuCard(item, index)).join("");
+    }
+    window.lucide?.createIcons();
 }
 
 function renderOrders(orders) {
@@ -267,8 +347,11 @@ function renderOrders(orders) {
                 </div>
                 <span class="rounded-full px-3 py-1 text-[11px] font-black ${statusClass(order.status)}">${escapeHtml(order.status)}</span>
             </div>
-            <div class="mt-3 rounded-xl bg-slate-50 px-3 py-2 text-xs font-black tracking-wide text-resqBlue">
-                Kode: ${escapeHtml(order.code)}
+            <div class="mt-3 flex items-center justify-between gap-3">
+                <div class="rounded-xl bg-slate-50 px-3 py-2 text-xs font-black tracking-wide text-resqBlue">
+                    Kode: ${escapeHtml(order.code)}
+                </div>
+                ${order.status === "Selesai" ? `<button data-ulasan="${escapeHtml(order.id)}" class="motion-button rounded-lg bg-slate-100 px-3 py-2 text-[11px] font-black text-resqBlue hover:bg-slate-200">Beri Ulasan</button>` : ""}
             </div>
         </article>
     `).join("");
@@ -323,10 +406,16 @@ function menuCard(item, index = 0) {
     const stockLabel = disabled ? "Stok habis" : `${item.stock} porsi`;
     const stockClass = disabled ? "bg-red-50 text-red-600" : item.stock <= 3 ? "bg-yellow-100 text-resqBlue" : "bg-emerald-50 text-emerald-700";
     const delay = Math.min(index * 55, 330);
+    const isFav = favoriteIds.has(item.id);
+    const heartColor = isFav ? "text-red-500" : "text-slate-400";
+    const heartFill = isFav ? "fill-current" : "";
 
     return `
         <article class="menu-card flex min-h-[330px] flex-col rounded-[24px] border border-slate-200 bg-white p-4 shadow-sm" style="animation-delay:${delay}ms">
             <div class="relative rounded-[20px] bg-[#fff8d7] p-4">
+                <button data-favorite="${escapeHtml(item.id)}" class="absolute left-3 top-3 z-10 rounded-full bg-white/80 p-2 ${heartColor} backdrop-blur transition hover:text-red-500 hover:scale-110">
+                    <i data-lucide="heart" class="h-4 w-4 ${heartFill}"></i>
+                </button>
                 <img src="${escapeHtml(item.imageUrl)}" alt="${escapeHtml(item.name)}" class="h-36 w-full object-contain transition duration-300 hover:scale-105" onerror="this.src='./assets/burger-signin.png'">
                 <span class="absolute right-3 top-3 rounded-full px-3 py-1 text-[11px] font-black ${stockClass}">${escapeHtml(stockLabel)}</span>
             </div>
