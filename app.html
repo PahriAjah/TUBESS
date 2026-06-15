@@ -54,10 +54,6 @@
                     <i data-lucide="heart" class="h-5 w-5"></i>
                     <span>Favorit</span>
                 </button>
-                <button data-target="notifikasi" class="app-nav flex w-full items-center gap-3 rounded-xl px-4 py-3 text-left text-sm font-semibold text-slate-600 transition hover:bg-slate-50">
-                    <i data-lucide="bell" class="h-5 w-5"></i>
-                    <span>Notifikasi</span>
-                </button>
                 <button data-target="profil" class="app-nav flex w-full items-center gap-3 rounded-xl px-4 py-3 text-left text-sm font-semibold text-slate-600 transition hover:bg-slate-50">
                     <i data-lucide="user-round" class="h-5 w-5"></i>
                     <span>Profil</span>
@@ -96,13 +92,46 @@
                     <button data-target="peta" class="app-nav flex shrink-0 items-center gap-2 rounded-xl px-3 py-2 text-xs font-bold text-slate-600"><i data-lucide="map" class="h-4 w-4"></i><span>Peta Lokasi</span></button>
                     <button data-target="pesanan" class="app-nav flex shrink-0 items-center gap-2 rounded-xl px-3 py-2 text-xs font-bold text-slate-600"><i data-lucide="shopping-bag" class="h-4 w-4"></i><span>Pesanan</span></button>
                     <button data-target="favorit" class="app-nav flex shrink-0 items-center gap-2 rounded-xl px-3 py-2 text-xs font-bold text-slate-600"><i data-lucide="heart" class="h-4 w-4"></i><span>Favorit</span></button>
-                    <button data-target="notifikasi" class="app-nav flex shrink-0 items-center gap-2 rounded-xl px-3 py-2 text-xs font-bold text-slate-600"><i data-lucide="bell" class="h-4 w-4"></i><span>Notifikasi</span></button>
                     <button data-target="profil" class="app-nav flex shrink-0 items-center gap-2 rounded-xl px-3 py-2 text-xs font-bold text-slate-600"><i data-lucide="user-round" class="h-4 w-4"></i><span>Profil</span></button>
                 </nav>
             </header>
 
+            <div class="notification-hub fixed right-4 top-4 z-50 lg:right-8 lg:top-6">
+                <button id="btn-notification" type="button" class="notification-button" aria-label="Buka notifikasi" aria-expanded="false">
+                    <i data-lucide="bell" class="h-5 w-5"></i>
+                    <span class="notification-dot" aria-hidden="true">2</span>
+                </button>
+                <div id="notification-popover" class="notification-popover hidden" role="dialog" aria-label="Notifikasi terbaru">
+                    <div class="flex items-start justify-between gap-4 border-b border-slate-100 px-4 py-4">
+                        <div>
+                            <p class="text-xs font-black uppercase tracking-[.18em] text-slate-400">Inbox</p>
+                            <h2 class="mt-1 text-lg font-black text-resqBlue">Notifikasi</h2>
+                        </div>
+                        <span id="notification-status" class="rounded-full bg-yellow-100 px-3 py-1 text-[11px] font-black text-resqBlue">2 baru</span>
+                    </div>
+                    <div class="space-y-3 p-3">
+                        <article class="notification-item">
+                            <span class="notification-icon bg-blue-100 text-blue-600"><i data-lucide="info" class="h-5 w-5"></i></span>
+                            <div>
+                                <p class="text-sm font-black text-resqBlue">Selamat Datang di RESQ!</p>
+                                <p class="mt-1 text-xs font-semibold leading-5 text-slate-500">Mulai selamatkan makanan pertamamu hari ini dan nikmati harga spesial.</p>
+                                <p class="mt-2 text-[10px] font-bold text-slate-400">Baru saja</p>
+                            </div>
+                        </article>
+                        <article class="notification-item">
+                            <span class="notification-icon bg-yellow-100 text-yellow-600"><i data-lucide="tag" class="h-5 w-5"></i></span>
+                            <div>
+                                <p class="text-sm font-black text-resqBlue">Banyak Roti Sisa di Bakery A!</p>
+                                <p class="mt-1 text-xs font-semibold leading-5 text-slate-500">Toko favoritmu baru saja mengunggah 5 roti sisa. Buruan pesan sebelum kehabisan!</p>
+                                <p class="mt-2 text-[10px] font-bold text-slate-400">2 jam yang lalu</p>
+                            </div>
+                        </article>
+                    </div>
+                </div>
+            </div>
+
             <main class="mx-auto max-w-[1500px] px-4 py-8 sm:px-6 lg:px-10">
-                <section id="dashboard" class="app-screen active">
+                <section id="dashboard" class="app-screen active pt-14 lg:pt-12">
                     <div class="dashboard-hero mb-8 overflow-hidden rounded-2xl border border-white/70 bg-white/80 p-6 shadow-sm md:p-8">
                         <div class="flex flex-col gap-6 md:flex-row md:items-end md:justify-between">
                         <div>
@@ -308,33 +337,6 @@
                         <div class="rounded-[22px] bg-slate-50 p-8 text-center md:col-span-2 xl:col-span-3">
                             <i data-lucide="heart" class="mx-auto h-12 w-12 text-slate-300"></i>
                             <p class="mt-4 text-sm font-bold text-slate-500">Belum ada item favorit.</p>
-                        </div>
-                    </div>
-                </section>
-
-                <section id="notifikasi" class="app-screen">
-                    <div class="mb-8">
-                        <h1 class="text-4xl font-black tracking-tight text-resqBlue">Notifikasi</h1>
-                        <p class="mt-3 text-sm font-medium text-slate-500">Pemberitahuan promo, status pesanan, dan menu baru.</p>
-                    </div>
-                    <div class="rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
-                        <div id="daftar-notifikasi" class="space-y-4">
-                            <div class="flex items-start gap-4 rounded-xl bg-slate-50 p-4">
-                                <span class="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-blue-100 text-blue-600"><i data-lucide="info" class="h-5 w-5"></i></span>
-                                <div>
-                                    <p class="text-sm font-black text-resqBlue">Selamat Datang di RESQ!</p>
-                                    <p class="mt-1 text-xs font-semibold text-slate-500">Mulai selamatkan makanan pertamamu hari ini dan nikmati harga spesial.</p>
-                                    <p class="mt-2 text-[10px] font-bold text-slate-400">Baru saja</p>
-                                </div>
-                            </div>
-                            <div class="flex items-start gap-4 rounded-xl bg-slate-50 p-4">
-                                <span class="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-yellow-100 text-yellow-600"><i data-lucide="tag" class="h-5 w-5"></i></span>
-                                <div>
-                                    <p class="text-sm font-black text-resqBlue">Banyak Roti Sisa di Bakery A!</p>
-                                    <p class="mt-1 text-xs font-semibold text-slate-500">Toko favoritmu baru saja mengunggah 5 roti sisa. Buruan pesan sebelum kehabisan!</p>
-                                    <p class="mt-2 text-[10px] font-bold text-slate-400">2 jam yang lalu</p>
-                                </div>
-                            </div>
                         </div>
                     </div>
                 </section>
