@@ -35,6 +35,12 @@ initAdminPage("dashboard", loadAdminDashboard);
 async function loadAdminDashboard(user, partnerProfile) {
     currentAdminUser = user;
     currentPartnerProfile = partnerProfile;
+
+    const suspensionKey = `resq_suspended_${partnerProfile?.id || user?.uid}`;
+    if (localStorage.getItem(suspensionKey) === "true") {
+        if (currentPartnerProfile) currentPartnerProfile.is_suspended = true;
+    }
+
     renderLayout(staticAdminData());
 
     try {
@@ -321,16 +327,26 @@ function setupOrderInteractions(initialOrders = []) {
         emptyState: document.getElementById("orders-empty-state"),
         modal: document.getElementById("order-detail-modal"),
         modalName: document.getElementById("modal-order-name"),
+        modalRecipient: document.getElementById("modal-order-recipient"),
         modalCode: document.getElementById("modal-order-code"),
         modalPrice: document.getElementById("modal-order-price"),
         modalStatus: document.getElementById("modal-order-status"),
         modalPickup: document.getElementById("modal-order-pickup"),
+        modalInputCode: document.getElementById("modal-order-input-code"),
+        modalError: document.getElementById("modal-order-error"),
+        modalAttempts: document.getElementById("modal-order-attempts"),
+        modalAttemptsLeft: document.getElementById("modal-order-attempts-left"),
+        modalCompletionZone: document.getElementById("modal-completion-zone"),
         modalComplete: document.getElementById("order-modal-complete"),
         modalClose: document.getElementById("order-modal-close"),
         modalCloseIcon: document.getElementById("order-modal-close-icon")
     };
 
     const render = () => {
+        if (currentPartnerProfile?.is_suspended) {
+            renderSuspendedState();
+            return;
+        }
         renderOrderStats(elements.statsGrid, orders);
         renderOrderTabs(elements.tabs, elements.tabCounts, orders, state.activeStatus);
         renderActionBar(elements.actionBar, elements.selectedCount, state.selected.size);
@@ -415,34 +431,88 @@ function setupOrderInteractions(initialOrders = []) {
         const order = orders.find((item) => item.id === state.modalOrderId);
         if (!order) return;
 
-        order.status = "Selesai";
-        order.color = statusColor(order.status);
-        closeOrderModal(elements.modal);
-        render();
+        const inputCode = elements.modalInputCode.value.trim();
+        const correctCode = order.code;
+
+        if (inputCode === correctCode) {
+            order.status = "Selesai";
+            order.color = statusColor(order.status);
+            closeOrderModal(elements.modal);
+            render();
+        } else {
+            handleFailedAttempt(elements, state);
+        }
     });
 
     render();
 }
 
+function handleFailedAttempt(elements, state) {
+    state.attempts = (state.attempts || 0) + 1;
+    const remaining = 3 - state.attempts;
+
+    elements.modalError.textContent = "Kode pickup salah!";
+    elements.modalError.classList.remove("hidden");
+    elements.modalAttempts.classList.remove("hidden");
+    elements.modalAttemptsLeft.textContent = remaining;
+
+    if (remaining <= 0) {
+        suspendPartner();
+    } else {
+        elements.modalInputCode.value = "";
+        elements.modalInputCode.focus();
+    }
+}
+
+function suspendPartner() {
+    if (currentPartnerProfile) {
+        currentPartnerProfile.is_suspended = true;
+        const suspensionKey = `resq_suspended_${currentPartnerProfile.id || currentAdminUser?.uid}`;
+        localStorage.setItem(suspensionKey, "true");
+    }
+    location.reload(); 
+}
+
+function renderSuspendedState() {
+    const main = document.getElementById("admin-screens");
+    if (!main) return;
+
+    main.innerHTML = `
+        <div class="flex min-h-[60vh] flex-col items-center justify-center p-8 text-center">
+            <div class="mb-6 flex h-20 w-20 items-center justify-center rounded-full bg-red-100 text-red-600">
+                <i data-lucide="alert-octagon" class="h-10 w-10"></i>
+            </div>
+            <h1 class="mb-2 text-2xl font-bold text-resq-navy">Akun Ditangguhkan</h1>
+            <p class="max-w-md text-gray-500">Akun Anda telah ditangguhkan karena terlalu banyak percobaan kode pickup yang salah. Silakan hubungi bantuan RESQ untuk memulihkan akun Anda.</p>
+            <button onclick="location.href='mailto:support@resq.com'" class="mt-8 rounded-lg bg-resq-navy px-6 py-3 font-bold text-white transition hover:opacity-90">Hubungi Bantuan</button>
+        </div>
+    `;
+    window.lucide?.createIcons();
+}
+
 function normalizeOrderView(order, index) {
-    const code = order.code || order.product?.sub || `#ORD-${String(index + 1).padStart(3, "0")}`;
+    const code = order.pickup_code || order.code || order.product?.sub || Math.floor(1000 + Math.random() * 9000).toString();
+    const blurredCode = code.length > 0 ? code.slice(0, -1) + "•" : code;
+    const recipient = order.customer_name || getCustomerName(order.customerEmail) || "Pelanggan RESQ";
     const status = normalizeAdminOrderStatus(order.status);
 
     return {
         ...order,
-        id: order.id || code.replace(/^#/, "") || `order-${index}`,
+        id: order.id || code || `order-${index}`,
         code,
+        blurredCode,
+        recipient,
         product: {
-            img: order.product?.img || pickImage(order.product?.name),
-            name: order.product?.name || "Produk Surplus",
-            sub: code
+            img: order.product?.img || pickImage(order.product?.name || order.product_name),
+            name: order.product?.name || order.product_name || "Produk Surplus",
+            sub: blurredCode
         },
-        price: order.price || "Rp 0",
-        priceValue: parsePrice(order.price),
+        price: order.price || formatRupiah(order.total_price) || "Rp 0",
+        priceValue: parsePrice(order.price || order.total_price),
         status,
         color: statusColor(status),
         pickup: order.pickup || "-",
-        createdAt: Number(order.createdAt || Date.now() - index * 60000)
+        createdAt: Number(order.createdAt || order.timestamp || Date.now() - index * 60000)
     };
 }
 
@@ -456,7 +526,7 @@ function normalizeAdminOrderStatus(status) {
 function getVisibleOrders(orders, state) {
     const filtered = orders.filter((order) => {
         const matchesStatus = state.activeStatus === "Semua" || order.status === state.activeStatus;
-        const text = `${order.product.name} ${order.code}`.toLowerCase();
+        const text = `${order.product.name} ${order.code} ${order.recipient}`.toLowerCase();
         return matchesStatus && text.includes(state.query);
     });
 
@@ -566,18 +636,29 @@ function openOrderModal(orderId, orders, elements, state) {
     if (!order || !elements.modal) return;
 
     state.modalOrderId = order.id;
+    state.attempts = 0;
+
     elements.modalName.textContent = order.product.name;
-    elements.modalCode.textContent = order.code;
+    elements.modalRecipient.textContent = order.recipient;
+    elements.modalCode.textContent = order.blurredCode;
     elements.modalPrice.textContent = order.price;
     elements.modalStatus.innerHTML = renderStatusBadge(order.status);
     elements.modalPickup.textContent = order.pickup;
-    elements.modalComplete.classList.toggle("hidden", order.status === "Selesai");
+
+    const isPending = order.status === "Diproses";
+    elements.modalComplete.classList.toggle("hidden", !isPending);
+    elements.modalCompletionZone.classList.toggle("hidden", !isPending);
+
+    elements.modalInputCode.value = "";
+    elements.modalError.classList.add("hidden");
+    elements.modalAttempts.classList.add("hidden");
 
     elements.modal.classList.remove("hidden");
     elements.modal.classList.add("flex");
     requestAnimationFrame(() => {
         elements.modal.classList.remove("opacity-0");
         elements.modal.querySelector("div")?.classList.remove("scale-95");
+        if (isPending) elements.modalInputCode.focus();
     });
 }
 
@@ -630,7 +711,7 @@ function mergeFirebaseData(baseData, menus, orders) {
         activities: orders.length ? orders.slice(0, 4).map((order) => ({
             icon: "shopping-bag",
             title: `Pesanan ${order.id ? `#${order.id}` : "baru"}`,
-            desc: `${order.productName || order.menuName || "Produk surplus"} dari ${getCustomerName(order.customerEmail)} menunggu proses pengelola`
+            desc: `${order.productName || order.menuName || "Produk surplus"} dari ${order.customer_name || getCustomerName(order.customerEmail)} menunggu proses pengelola`
         })) : baseData.activities
     };
 }
@@ -811,7 +892,7 @@ function staticAdminData() {
             { icon: "check-circle", label: "Selesai", value: "43" }
         ],
         activities: [
-            { icon: "shopping-bag", title: "Pesanan baru #ORD-456BB", desc: "Croissant Butter menunggu pickup jam 19:00 WIB" },
+            { icon: "shopping-bag", title: "Pesanan baru #4562", desc: "Croissant Butter menunggu pickup jam 19:00 WIB" },
             { icon: "store", title: "Profil toko diperbarui", desc: "Informasi Bumi Bakery berhasil diperbarui" },
             { icon: "check-circle", title: "Pickup selesai", desc: "Double Cheese Burger sudah diambil pelanggan" },
             { icon: "message-square", title: "Pesan pelanggan", desc: "Ada 3 pesan baru yang perlu dibalas" }
@@ -823,12 +904,12 @@ function staticAdminData() {
             { label: "Dairy", value: "9%" }
         ],
         orders: [
-            orderSeed("Croissant Butter", "#ORD-456BB", "Rp 15.000", "Diproses", "yellow", "19:00 WIB", foodImages.croissant),
-            orderSeed("Chicken Katsu Bento", "#ORD-748BB", "Rp 25.000", "Diproses", "yellow", "20:00 WIB", foodImages.bento),
-            orderSeed("Box of 6 Donuts", "#ORD-832BB", "Rp 24.000", "Diproses", "yellow", "21:30 WIB", foodImages.donuts),
-            orderSeed("Healthy Mix Salad", "#ORD-919BB", "Rp 22.500", "Selesai", "green", "18:00 WIB", foodImages.salad),
-            orderSeed("Double Cheese Burger", "#ORD-126BB", "Rp 20.000", "Selesai", "green", "20:30 WIB", foodImages.burger),
-            orderSeed("Vegan Salad Bowl", "#ORD-337BB", "Rp 25.000", "Dibatalkan", "red", "19:30 WIB", foodImages.vegetables)
+            orderSeed("Croissant Butter", "4562", "Rp 15.000", "Diproses", "yellow", "19:00 WIB", foodImages.croissant),
+            orderSeed("Chicken Katsu Bento", "7481", "Rp 25.000", "Diproses", "yellow", "20:00 WIB", foodImages.bento),
+            orderSeed("Box of 6 Donuts", "8324", "Rp 24.000", "Diproses", "yellow", "21:30 WIB", foodImages.donuts),
+            orderSeed("Healthy Mix Salad", "9192", "Rp 22.500", "Selesai", "green", "18:00 WIB", foodImages.salad),
+            orderSeed("Double Cheese Burger", "1263", "Rp 20.000", "Selesai", "green", "20:30 WIB", foodImages.burger),
+            orderSeed("Vegan Salad Bowl", "3374", "Rp 25.000", "Dibatalkan", "red", "19:30 WIB", foodImages.vegetables)
         ],
         inventory: [
             inventorySeed("Croissant Butter", "Bakery", "Bumi Bakery", "18 pcs", "Hari ini, 22:00", "Tersedia", "green", foodImages.croissant),

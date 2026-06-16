@@ -327,11 +327,20 @@ function renderOrders(data) {
                     </button>
                 </div>
                 <dl class="space-y-3 text-sm">
-                    <div class="flex justify-between gap-4 border-b border-gray-100 pb-3"><dt class="text-gray-500">Kode pesanan</dt><dd id="modal-order-code" class="font-bold text-resq-navy"></dd></div>
+                    <div class="flex justify-between gap-4 border-b border-gray-100 pb-3"><dt class="text-gray-500">Penerima</dt><dd id="modal-order-recipient" class="font-bold text-resq-navy"></dd></div>
+                    <div class="flex justify-between gap-4 border-b border-gray-100 pb-3"><dt class="text-gray-500">Kode pickup</dt><dd id="modal-order-code" class="font-bold text-resq-navy"></dd></div>
                     <div class="flex justify-between gap-4 border-b border-gray-100 pb-3"><dt class="text-gray-500">Harga</dt><dd id="modal-order-price" class="font-bold text-resq-navy"></dd></div>
                     <div class="flex justify-between gap-4 border-b border-gray-100 pb-3"><dt class="text-gray-500">Status</dt><dd id="modal-order-status"></dd></div>
                     <div class="flex justify-between gap-4"><dt class="text-gray-500">Jadwal pickup</dt><dd id="modal-order-pickup" class="font-bold text-resq-navy"></dd></div>
                 </dl>
+                <div id="modal-completion-zone" class="mt-6 border-t border-gray-100 pt-6">
+                    <label class="block">
+                        <span class="mb-2 block text-sm font-semibold text-resq-navy">Konfirmasi Kode Pickup</span>
+                        <input id="modal-order-input-code" type="text" maxlength="4" class="w-full rounded-lg border border-gray-200 px-4 py-2 text-center text-lg font-bold tracking-[0.5em] outline-none transition focus:border-resq-navy" placeholder="••••">
+                    </label>
+                    <p id="modal-order-error" class="mt-2 hidden text-xs font-bold text-red-600"></p>
+                    <p id="modal-order-attempts" class="mt-1 hidden text-[10px] text-gray-500">Sisa percobaan: <span id="modal-order-attempts-left" class="font-bold text-red-600">3</span></p>
+                </div>
                 <div class="mt-6 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
                     <button id="order-modal-close" type="button" class="cursor-pointer rounded-lg border border-gray-200 px-4 py-2 text-sm font-semibold text-gray-600 transition-all duration-200 hover:bg-gray-50">Tutup</button>
                     <button id="order-modal-complete" type="button" class="cursor-pointer rounded-lg bg-resq-navy px-4 py-2 text-sm font-semibold text-white transition-all duration-200 hover:opacity-90">Tandai selesai</button>

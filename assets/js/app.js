@@ -362,7 +362,7 @@ confirmButton?.addEventListener("click", async () => {
     confirmButton.innerText = "Memproses...";
     confirmButton.disabled = true;
 
-    const pickupCode = "RESQ-" + Math.random().toString(36).substring(2, 6).toUpperCase();
+    const pickupCode = Math.floor(1000 + Math.random() * 9000).toString();
 
     try {
         const orderPayload = {
@@ -376,6 +376,7 @@ confirmButton?.addEventListener("click", async () => {
             payment_demo: paymentMethod.value === "QRIS",
             pickup_code: pickupCode,
             customer_email: userEmail,
+            customer_name: userName.innerText || userEmail.split("@")[0],
             status: "Diproses",
             timestamp: Date.now(),
             firebase_timestamp: serverTimestamp()
