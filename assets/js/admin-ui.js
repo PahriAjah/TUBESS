@@ -7,8 +7,6 @@ export const screenNames = {
     pelanggan: "Pelanggan",
     pesan: "Pesan",
     produk: "Produk",
-    integrasi: "Integrasi",
-    faktur: "Faktur",
     pengaturan: "Pengaturan",
     support: "Bantuan RESQ",
     "pusat-bantuan": "Pusat Bantuan"
@@ -28,9 +26,7 @@ export const navGroups = [
     {
         title: "Lainnya",
         items: [
-            ["produk", "package", "Produk"],
-            ["integrasi", "plug", "Integrasi"],
-            ["faktur", "receipt", "Faktur"]
+            ["produk", "package", "Produk"]
         ]
     },
     {
@@ -432,13 +428,50 @@ function renderMessages(data) {
 function renderProducts(data) {
     return `
         ${pageHeader("produk", "Produk", "Kelola katalog produk surplus toko Anda", `
-            <button class="inline-flex items-center justify-center gap-2 rounded-lg bg-resq-navy px-4 py-2 text-sm font-semibold text-white hover:opacity-90">
+            <button data-focus-product-form class="inline-flex cursor-pointer items-center justify-center gap-2 rounded-lg bg-resq-navy px-4 py-2 text-sm font-semibold text-white transition hover:opacity-90">
                 ${icon("plus", "h-4 w-4")}
                 <span>Tambah Produk</span>
             </button>
         `)}
         ${tabs([{ label: "Semua", count: 128 }, { label: "Bakery", count: 38 }, { label: "Ready Meal", count: 42 }, { label: "Vegetables", count: 29 }, { label: "Dairy", count: 19 }])}
         ${toolbar("Cari produk...")}
+
+        <section id="partner-product-form" class="mb-6 rounded-xl border border-gray-200 bg-white p-5 shadow-sm">
+            <div class="mb-5">
+                <h3 class="text-lg font-bold text-resq-navy">Upload makanan surplus</h3>
+                <p class="mt-1 text-sm text-gray-500">Menu yang disimpan di sini akan muncul di halaman user.</p>
+            </div>
+            <div class="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+                <label class="text-sm font-semibold text-resq-navy">Nama makanan
+                    <input id="partner-menu-name" class="mt-2 h-11 w-full rounded-lg border border-gray-200 px-3 text-sm outline-none transition focus:border-resq-navy" placeholder="Croissant Butter">
+                </label>
+                <label class="text-sm font-semibold text-resq-navy">Kategori
+                    <select id="partner-menu-category" class="mt-2 h-11 w-full rounded-lg border border-gray-200 px-3 text-sm outline-none transition focus:border-resq-navy">
+                        <option value="Ready Meal">Ready Meal</option>
+                        <option value="Bakery">Bakery</option>
+                        <option value="Sayur & Buah">Sayur & Buah</option>
+                        <option value="Dairy">Dairy</option>
+                    </select>
+                </label>
+                <label class="text-sm font-semibold text-resq-navy">Harga surplus
+                    <input id="partner-menu-price" type="number" min="0" class="mt-2 h-11 w-full rounded-lg border border-gray-200 px-3 text-sm outline-none transition focus:border-resq-navy" placeholder="15000">
+                </label>
+                <label class="text-sm font-semibold text-resq-navy">Stok porsi
+                    <input id="partner-menu-stock" type="number" min="1" class="mt-2 h-11 w-full rounded-lg border border-gray-200 px-3 text-sm outline-none transition focus:border-resq-navy" placeholder="10">
+                </label>
+            </div>
+            <div class="mt-4 grid gap-4 md:grid-cols-[1fr_1fr_auto] md:items-end">
+                <label class="text-sm font-semibold text-resq-navy">Expired / pickup terakhir
+                    <input id="partner-menu-expired" class="mt-2 h-11 w-full rounded-lg border border-gray-200 px-3 text-sm outline-none transition focus:border-resq-navy" placeholder="Hari ini, 22:00">
+                </label>
+                <label class="text-sm font-semibold text-resq-navy">Foto makanan
+                    <input id="partner-menu-image" type="file" accept="image/*" class="mt-2 block w-full text-sm font-semibold text-gray-600 file:mr-4 file:rounded-lg file:border-0 file:bg-resq-navy file:px-4 file:py-2.5 file:text-sm file:font-bold file:text-white">
+                </label>
+                <button id="btn-save-partner-menu" class="h-11 rounded-lg bg-resq-navy px-5 text-sm font-bold text-white transition hover:opacity-90">Simpan menu</button>
+            </div>
+            <p id="partner-menu-message" class="mt-4 hidden rounded-lg px-4 py-3 text-sm font-semibold"></p>
+        </section>
+
         <div class="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
             ${data.products.map((product) => `
                 <article class="overflow-hidden rounded-xl border border-gray-200 bg-white transition-colors hover:border-resq-navy">
@@ -456,37 +489,6 @@ function renderProducts(data) {
                 </article>
             `).join("")}
         </div>
-    `;
-}
-
-function renderIntegrations(data) {
-    return `
-        ${pageHeader("integrasi", "Integrasi", "Kelola layanan pembayaran, notifikasi, dan operasional toko")}
-        <div class="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-            ${data.integrations.map((integration) => `
-                <article class="rounded-xl border border-gray-200 p-5 transition-colors hover:border-resq-navy">
-                    <div class="mb-4 flex h-10 w-10 items-center justify-center rounded-lg border border-gray-200 text-gray-600">${icon(integration.icon)}</div>
-                    <h3 class="mb-2 font-bold">${escapeHtml(integration.title)}</h3>
-                    <p class="mb-4 text-sm leading-relaxed text-gray-500">${escapeHtml(integration.desc)}</p>
-                    ${badge(integration.status === "Terhubung" ? "green" : "gray", integration.status)}
-                </article>
-            `).join("")}
-        </div>
-    `;
-}
-
-function renderInvoices(data) {
-    return `
-        ${pageHeader("faktur", "Faktur", "Pantau invoice transaksi pelanggan dan settlement toko")}
-        ${statGrid(data.invoiceStats)}
-        ${toolbar("Cari faktur...")}
-        ${table(["No Faktur", "Pelanggan", "Total", "Tanggal", "Status"], data.invoices.map((invoice) => row([
-            invoice.number,
-            invoice.customer,
-            invoice.total,
-            invoice.date,
-            badge(invoice.color, invoice.status)
-        ])).join(""))}
     `;
 }
 
@@ -519,6 +521,45 @@ function renderSupport(data) {
     return `
         ${pageHeader("support", "Bantuan RESQ", "Hubungi customer service RESQ untuk bantuan operasional toko")}
         ${statGrid(data.supportStats)}
+        <section class="mb-8 rounded-xl border border-gray-200 bg-resq-white p-5 shadow-sm">
+            <div class="mb-5 flex flex-col gap-2 md:flex-row md:items-start md:justify-between">
+                <div>
+                    <h2 class="text-lg font-bold text-resq-navy">Kirim pesan ke admin RESQ</h2>
+                    <p class="mt-1 text-sm text-gray-500">Pesan akan ditujukan ke <span class="font-semibold text-resq-navy">admin123@gmail.com</span>.</p>
+                </div>
+                <div class="inline-flex w-fit items-center gap-2 rounded-full bg-yellow-50 px-3 py-1.5 text-xs font-semibold text-yellow-700">
+                    ${icon("mail", "h-4 w-4")}
+                    Email admin
+                </div>
+            </div>
+            <div id="support-message-form" class="grid gap-4">
+                <div class="grid gap-4 md:grid-cols-[1fr_180px]">
+                    <label class="block">
+                        <span class="mb-2 block text-sm font-semibold text-gray-700">Subjek</span>
+                        <input id="support-message-subject" type="text" class="w-full rounded-lg border border-gray-200 px-4 py-3 text-sm outline-none transition focus:border-resq-navy focus:ring-2 focus:ring-resq-navy/10" placeholder="Contoh: Bantuan verifikasi toko">
+                    </label>
+                    <label class="block">
+                        <span class="mb-2 block text-sm font-semibold text-gray-700">Prioritas</span>
+                        <select id="support-message-priority" class="w-full rounded-lg border border-gray-200 px-4 py-3 text-sm outline-none transition focus:border-resq-navy focus:ring-2 focus:ring-resq-navy/10">
+                            <option>Normal</option>
+                            <option>Tinggi</option>
+                            <option>Darurat</option>
+                        </select>
+                    </label>
+                </div>
+                <label class="block">
+                    <span class="mb-2 block text-sm font-semibold text-gray-700">Isi pesan</span>
+                    <textarea id="support-message-body" rows="5" class="w-full resize-none rounded-lg border border-gray-200 px-4 py-3 text-sm outline-none transition focus:border-resq-navy focus:ring-2 focus:ring-resq-navy/10" placeholder="Tulis kendala atau pertanyaan untuk admin RESQ..."></textarea>
+                </label>
+                <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                    <p id="support-message-status" class="hidden rounded-lg px-4 py-3 text-sm font-semibold"></p>
+                    <button id="btn-send-support-message" type="button" class="inline-flex cursor-pointer items-center justify-center gap-2 rounded-lg bg-resq-navy px-5 py-3 text-sm font-semibold text-white shadow-sm transition hover:-translate-y-0.5 hover:shadow-md">
+                        ${icon("send", "h-4 w-4")}
+                        Kirim pesan
+                    </button>
+                </div>
+            </div>
+        </section>
         ${toolbar("Cari tiket support...")}
         ${table(["ID Tiket", "Subjek", "Pengirim", "Prioritas", "Status"], data.tickets.map((ticket) => row([
             ticket.id,
@@ -553,8 +594,6 @@ const screenRenderer = {
     pelanggan: renderCustomers,
     pesan: renderMessages,
     produk: renderProducts,
-    integrasi: renderIntegrations,
-    faktur: renderInvoices,
     pengaturan: renderSettings,
     support: renderSupport,
     "pusat-bantuan": renderHelpCenter

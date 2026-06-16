@@ -1,9 +1,10 @@
 import { auth, signOut } from "./firebase.js";
-import { getPartnerProfile, isPartnerAccount, requireAuth } from "./auth-flow.js";
+import { getPartnerProfile, isPartnerAccount, isPartnerProfileComplete, requireAuth } from "./auth-flow.js";
 import {
     filterDataForPartner,
     formatDate,
     getCustomerName,
+    getPartnerDisplayName,
     isPickedUp,
     isWaitingPickup,
     loadAdminData
@@ -25,6 +26,11 @@ export function initAdminPage(_pageKey, onReady) {
         }
 
         const partnerProfile = await getPartnerProfile(user);
+        if (!isPartnerProfileComplete(partnerProfile)) {
+            window.location.href = "partner-onboarding.html";
+            return;
+        }
+
         renderPartnerProfile(partnerProfile);
         await renderNotifications(partnerProfile);
         await onReady(user, partnerProfile);
@@ -234,7 +240,7 @@ function escapeNotificationText(value) {
 }
 
 function renderPartnerProfile(profile) {
-    const storeName = profile?.store_name || profile?.storeName || "Nama Toko";
+    const storeName = getPartnerDisplayName(profile);
 
     document.querySelectorAll("[data-partner-store-name]").forEach((element) => {
         element.innerText = storeName;

@@ -1,7 +1,9 @@
 import { initAdminPage } from "./admin-shell.js";
+import { realtimeDb, ref, push, serverTimestamp } from "./firebase.js";
 import {
     filterDataForPartner,
     getCustomerName,
+    getPartnerDisplayName,
     getInitials,
     getPrimaryStoreName,
     isPickedUp,
@@ -10,6 +12,10 @@ import {
 } from "./admin-data.js";
 import { escapeHtml, formatRupiah } from "./utils.js";
 import { renderMobileNav, renderScreens, renderSidebar } from "./admin-ui.js";
+
+const LOCAL_MENUS_KEY = "resq_partner_uploaded_menus";
+const SUPPORT_MESSAGES_KEY = "resq_support_messages";
+const SUPPORT_ADMIN_EMAIL = "admin123@gmail.com";
 
 const foodImages = {
     croissant: "https://images.unsplash.com/photo-1549931319-a545dcf3bc73?w=500&q=80",
@@ -21,14 +27,19 @@ const foodImages = {
     vegetables: "https://images.unsplash.com/photo-1512621776951-a57141f2eefd?w=500&q=80"
 };
 
+let currentAdminUser = null;
+let currentPartnerProfile = null;
+
 initAdminPage("dashboard", loadAdminDashboard);
 
 async function loadAdminDashboard(user, partnerProfile) {
+    currentAdminUser = user;
+    currentPartnerProfile = partnerProfile;
     renderLayout(staticAdminData());
 
     try {
         const { menus, orders } = filterDataForPartner(await loadAdminData(), partnerProfile);
-        const storeName = getPrimaryStoreName(menus, orders);
+        const storeName = getPartnerDisplayName(partnerProfile) || getPrimaryStoreName(menus, orders);
         const dynamicData = mergeFirebaseData(staticAdminData(), menus, orders);
 
         document.title = `RESQ - Dashboard Mitra ${storeName}`;
@@ -47,7 +58,209 @@ function renderLayout(data) {
     setupNavigation();
     setupMobileMenu();
     setupOrderInteractions(data.orders);
+    setupPartnerProductForm();
+    setupSupportMessageForm();
     window.lucide?.createIcons();
+}
+
+function setupPartnerProductForm() {
+    const form = document.getElementById("partner-product-form");
+    const saveButton = document.getElementById("btn-save-partner-menu");
+    if (!form || !saveButton) return;
+
+    document.querySelector("[data-focus-product-form]")?.addEventListener("click", () => {
+        form.scrollIntoView({ behavior: "smooth", block: "start" });
+        document.getElementById("partner-menu-name")?.focus();
+    });
+
+    saveButton.addEventListener("click", async () => {
+        const message = document.getElementById("partner-menu-message");
+        saveButton.disabled = true;
+        saveButton.innerText = "Menyimpan...";
+        showPartnerMenuMessage(message, "", "");
+
+        try {
+            const payload = await buildPartnerMenuPayload();
+            saveLocalPartnerMenu(payload);
+
+            try {
+                await push(ref(realtimeDb, "menus"), payload);
+            } catch (error) {
+                console.warn("Menu saved locally because Firebase write failed:", error);
+            }
+
+            clearPartnerMenuForm();
+            showPartnerMenuMessage(message, "Menu berhasil disimpan dan akan tampil di halaman user.", "success");
+            await loadAdminDashboard(currentAdminUser, currentPartnerProfile);
+        } catch (error) {
+            showPartnerMenuMessage(message, error.message || "Gagal menyimpan menu.", "error");
+        } finally {
+            saveButton.disabled = false;
+            saveButton.innerText = "Simpan menu";
+        }
+    });
+}
+
+async function buildPartnerMenuPayload() {
+    const name = document.getElementById("partner-menu-name")?.value.trim();
+    const category = document.getElementById("partner-menu-category")?.value || "Ready Meal";
+    const price = Number(document.getElementById("partner-menu-price")?.value || 0);
+    const stock = Number(document.getElementById("partner-menu-stock")?.value || 0);
+    const expired = document.getElementById("partner-menu-expired")?.value.trim() || "Hari ini";
+    const imageFile = document.getElementById("partner-menu-image")?.files?.[0];
+
+    if (!name) throw new Error("Nama makanan wajib diisi.");
+    if (!price || price < 1) throw new Error("Harga surplus wajib diisi.");
+    if (!stock || stock < 1) throw new Error("Stok porsi wajib diisi.");
+
+    const storeName = getPartnerDisplayName(currentPartnerProfile);
+    const imageData = imageFile ? await readImageAsDataUrl(imageFile) : currentPartnerProfile?.food_photo_data || "./assets/burger-signin.png";
+
+    return {
+        id: `local-menu-${Date.now()}`,
+        name,
+        category,
+        surplus_price: price,
+        price,
+        stock,
+        expired_at: expired,
+        image_url: imageData,
+        restaurant_id: storeName,
+        partner_uid: currentAdminUser?.uid || currentPartnerProfile?.id || "",
+        created_at: Date.now(),
+        firebase_created_at: serverTimestamp()
+    };
+}
+
+function readLocalPartnerMenus() {
+    try {
+        return JSON.parse(localStorage.getItem(LOCAL_MENUS_KEY) || "[]");
+    } catch (error) {
+        console.error("Local menus read error:", error);
+        return [];
+    }
+}
+
+function saveLocalPartnerMenu(menu) {
+    const menus = readLocalPartnerMenus();
+    menus.unshift(menu);
+    localStorage.setItem(LOCAL_MENUS_KEY, JSON.stringify(menus));
+}
+
+function clearPartnerMenuForm() {
+    ["partner-menu-name", "partner-menu-price", "partner-menu-stock", "partner-menu-expired"].forEach((id) => {
+        const input = document.getElementById(id);
+        if (input) input.value = "";
+    });
+    const imageInput = document.getElementById("partner-menu-image");
+    if (imageInput) imageInput.value = "";
+}
+
+function showPartnerMenuMessage(element, message, type) {
+    if (!element) return;
+    if (!message) {
+        element.classList.add("hidden");
+        element.innerText = "";
+        return;
+    }
+
+    element.innerText = message;
+    element.className = `mt-4 rounded-lg px-4 py-3 text-sm font-semibold ${type === "success" ? "bg-emerald-50 text-emerald-700" : "bg-red-50 text-red-600"}`;
+}
+
+function setupSupportMessageForm() {
+    const sendButton = document.getElementById("btn-send-support-message");
+    if (!sendButton) return;
+
+    sendButton.addEventListener("click", () => {
+        const subjectInput = document.getElementById("support-message-subject");
+        const priorityInput = document.getElementById("support-message-priority");
+        const bodyInput = document.getElementById("support-message-body");
+        const status = document.getElementById("support-message-status");
+        const subject = subjectInput?.value.trim() || "";
+        const priority = priorityInput?.value || "Normal";
+        const body = bodyInput?.value.trim() || "";
+
+        if (!subject || !body) {
+            showSupportMessageStatus(status, "Subjek dan isi pesan wajib diisi.", "error");
+            return;
+        }
+
+        const senderEmail = currentAdminUser?.email || currentPartnerProfile?.email || "Email tidak tersedia";
+        const senderName = getPartnerDisplayName(currentPartnerProfile) || senderEmail;
+        const payload = {
+            id: `SPT-${Date.now()}`,
+            to: SUPPORT_ADMIN_EMAIL,
+            subject,
+            priority,
+            body,
+            senderEmail,
+            senderName,
+            createdAt: new Date().toISOString()
+        };
+
+        saveLocalSupportMessage(payload);
+
+        const emailBody = [
+            `Nama toko/akun: ${senderName}`,
+            `Email login: ${senderEmail}`,
+            `Prioritas: ${priority}`,
+            "",
+            body
+        ].join("\n");
+        const mailtoUrl = `mailto:${SUPPORT_ADMIN_EMAIL}?subject=${encodeURIComponent(`[RESQ Support] ${subject}`)}&body=${encodeURIComponent(emailBody)}`;
+
+        window.location.href = mailtoUrl;
+        bodyInput.value = "";
+        subjectInput.value = "";
+        showSupportMessageStatus(status, "Pesan disiapkan untuk dikirim ke admin123@gmail.com.", "success");
+    });
+}
+
+function saveLocalSupportMessage(message) {
+    const messages = readLocalSupportMessages();
+    messages.unshift(message);
+    localStorage.setItem(SUPPORT_MESSAGES_KEY, JSON.stringify(messages));
+}
+
+function readLocalSupportMessages() {
+    try {
+        return JSON.parse(localStorage.getItem(SUPPORT_MESSAGES_KEY) || "[]");
+    } catch (error) {
+        return [];
+    }
+}
+
+function showSupportMessageStatus(element, message, type) {
+    if (!element) return;
+    element.innerText = message;
+    element.className = `rounded-lg px-4 py-3 text-sm font-semibold ${type === "success" ? "bg-emerald-50 text-emerald-700" : "bg-red-50 text-red-600"}`;
+}
+
+async function readImageAsDataUrl(file) {
+    if (!file) return "";
+    if (!file.type.startsWith("image/")) throw new Error("File foto harus berupa gambar.");
+
+    const imageUrl = URL.createObjectURL(file);
+    const image = await loadImage(imageUrl);
+    URL.revokeObjectURL(imageUrl);
+
+    const canvas = document.createElement("canvas");
+    const maxSize = 900;
+    const scale = Math.min(1, maxSize / Math.max(image.width, image.height));
+    canvas.width = Math.max(1, Math.round(image.width * scale));
+    canvas.height = Math.max(1, Math.round(image.height * scale));
+    canvas.getContext("2d").drawImage(image, 0, 0, canvas.width, canvas.height);
+    return canvas.toDataURL("image/jpeg", 0.82);
+}
+
+function loadImage(src) {
+    return new Promise((resolve, reject) => {
+        const image = new Image();
+        image.onload = () => resolve(image);
+        image.onerror = reject;
+        image.src = src;
+    });
 }
 
 function setupNavigation() {
@@ -591,12 +804,6 @@ function staticAdminData() {
             { icon: "repeat", label: "Repeat order", value: "61%" },
             { icon: "star", label: "Rating rata-rata", value: "4.8" }
         ],
-        invoiceStats: [
-            { icon: "receipt", label: "Total faktur", value: "412" },
-            { icon: "check-circle", label: "Lunas", value: "389" },
-            { icon: "clock", label: "Menunggu", value: "18" },
-            { icon: "x-circle", label: "Gagal", value: "5" }
-        ],
         supportStats: [
             { icon: "ticket", label: "Total tiket", value: "73" },
             { icon: "clock", label: "Open", value: "12" },
@@ -644,19 +851,6 @@ function staticAdminData() {
             productSeed("Box of 6 Donuts", "Rp 24.000", "Aktif", foodImages.donuts),
             productSeed("Vegan Salad Bowl", "Rp 25.000", "Draft", foodImages.vegetables)
         ],
-        integrations: [
-            { icon: "credit-card", title: "Payment Gateway", desc: "Integrasi pembayaran QRIS, e-wallet, dan transfer bank", status: "Terhubung" },
-            { icon: "mail", title: "Email Notification", desc: "Kirim email otomatis untuk invoice dan pickup code", status: "Terhubung" },
-            { icon: "bar-chart-3", title: "Analytics", desc: "Pantau performa conversion dan order harian", status: "Belum aktif" },
-            { icon: "message-circle", title: "WhatsApp API", desc: "Kirim pengingat pickup otomatis ke pelanggan", status: "Belum aktif" },
-            { icon: "database", title: "Firebase", desc: "Autentikasi dan penyimpanan data aplikasi", status: "Terhubung" },
-            { icon: "map-pin", title: "Maps Service", desc: "Menampilkan toko terdekat dari lokasi pelanggan", status: "Terhubung" }
-        ],
-        invoices: [
-            { number: "#INV-2026-001", customer: "Raka Pratama", total: "Rp 40.000", date: "08 Jun 2026", status: "Lunas", color: "green" },
-            { number: "#INV-2026-002", customer: "Nabila Putri", total: "Rp 25.000", date: "08 Jun 2026", status: "Menunggu", color: "yellow" },
-            { number: "#INV-2026-003", customer: "Dimas Arya", total: "Rp 20.000", date: "07 Jun 2026", status: "Gagal", color: "red" }
-        ],
         tickets: [
             { id: "#TCK-001", subject: "Kode pickup tidak muncul", sender: "Nabila Putri", priority: "Tinggi", priorityColor: "red", status: "Open", statusColor: "yellow" },
             { id: "#TCK-002", subject: "Produk sudah habis", sender: "Bumi Bakery", priority: "Sedang", priorityColor: "yellow", status: "Diproses", statusColor: "blue" },
@@ -665,7 +859,7 @@ function staticAdminData() {
         helpArticles: [
             { icon: "book-open", title: "Cara mengelola pesanan", desc: "Panduan memproses pesanan sampai pickup selesai." },
             { icon: "store", title: "Mengatur profil toko", desc: "Langkah memperbarui data toko mitra di RESQ." },
-            { icon: "receipt", title: "Mengelola faktur", desc: "Cara membaca status invoice dan settlement." },
+            { icon: "key-round", title: "Mengelola kode pickup", desc: "Cara membantu pelanggan saat kode pickup tidak muncul." },
             { icon: "package", title: "Mengatur stok surplus", desc: "Panduan update stok dan expired time produk." },
             { icon: "shield-check", title: "Keamanan akun", desc: "Tips menjaga akses pengelola mitra tetap aman." },
             { icon: "message-square", title: "Template balasan", desc: "Contoh balasan untuk keluhan pelanggan umum." }

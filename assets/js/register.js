@@ -1,5 +1,5 @@
 import { auth, googleProvider, realtimeDb, createUserWithEmailAndPassword, signInWithPopup, ref, set, serverTimestamp } from "./firebase.js";
-import { getUserHomePage, redirectWhenLoggedIn } from "./auth-flow.js";
+import { getUserHomePage, redirectWhenLoggedIn, saveLocalPartnerProfile } from "./auth-flow.js";
 import { byId, setError } from "./utils.js";
 
 redirectWhenLoggedIn("app.html");
@@ -45,7 +45,7 @@ registerButton?.addEventListener("click", async () => {
         validateRegistration();
         const userCredential = await createUserWithEmailAndPassword(auth, emailInput.value.trim(), passwordInput.value);
         await savePartnerProfile(userCredential.user);
-        window.location.href = await getUserHomePage(userCredential.user);
+        window.location.href = selectedRole === "partner" ? "partner-onboarding.html" : await getUserHomePage(userCredential.user);
     } catch (error) {
         console.error("Register error:", error);
         const message = error.message === "partner-profile-incomplete"
@@ -63,9 +63,10 @@ googleRegisterButton?.addEventListener("click", async () => {
     googleRegisterButton.classList.add("opacity-70");
 
     try {
+        validateRegistration();
         const userCredential = await signInWithPopup(auth, googleProvider);
         await savePartnerProfile(userCredential.user);
-        window.location.href = await getUserHomePage(userCredential.user);
+        window.location.href = selectedRole === "partner" ? "partner-onboarding.html" : await getUserHomePage(userCredential.user);
     } catch (error) {
         console.error("Google login error:", error);
         setError(errorText, `Login Google gagal: ${error.code || "unknown-error"}`);
@@ -98,13 +99,22 @@ function validateRegistration() {
 async function savePartnerProfile(user) {
     if (selectedRole !== "partner") return;
 
-    await set(ref(realtimeDb, `partners/${user.uid}`), {
+    const profile = {
         owner_name: nameInput.value.trim() || user.displayName || user.email.split("@")[0],
         store_name: storeNameInput.value.trim(),
         phone: storePhoneInput.value.trim(),
         address: storeAddressInput.value.trim(),
         email: user.email,
         role: "partner",
+        profile_completed: false,
         created_at: serverTimestamp()
-    });
+    };
+
+    saveLocalPartnerProfile(user, profile);
+
+    try {
+        await set(ref(realtimeDb, `partners/${user.uid}`), profile);
+    } catch (error) {
+        console.warn("Partner profile saved locally because Firebase write failed:", error);
+    }
 }

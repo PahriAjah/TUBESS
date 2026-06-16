@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RESQ - Lengkapi Profil Mitra</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script src="./assets/js/tailwind-config.js"></script>
+</head>
+<body class="min-h-screen bg-[#fffdf5] font-sans text-resqNavy">
+    <main class="grid min-h-screen lg:grid-cols-[.9fr_1.1fr]">
+        <section class="hidden bg-resqBlue p-10 text-white lg:flex lg:flex-col lg:justify-between">
+            <a href="index.html" class="w-fit">
+                <img src="./assets/img/logo.png" alt="RESQ" class="h-16 w-auto brightness-0 invert">
+            </a>
+            <div>
+                <p class="mb-4 inline-flex rounded-full bg-white/10 px-4 py-2 text-xs font-black uppercase tracking-[.2em] text-resqYellow">Setup Mitra</p>
+                <h1 class="max-w-xl text-5xl font-black leading-tight">Lengkapi profil toko sebelum mulai menerima pesanan.</h1>
+                <p class="mt-5 max-w-md text-sm font-semibold leading-7 text-white/70">Logo, foto makanan, dan lokasi membantu pelanggan mengenali toko kamu dan menemukan titik pickup dengan jelas.</p>
+            </div>
+            <div class="grid grid-cols-3 gap-3 text-center">
+                <div class="rounded-2xl bg-white/10 p-4"><p class="text-2xl font-black">1</p><p class="mt-1 text-xs font-semibold text-white/70">Logo</p></div>
+                <div class="rounded-2xl bg-white/10 p-4"><p class="text-2xl font-black">2</p><p class="mt-1 text-xs font-semibold text-white/70">Foto menu</p></div>
+                <div class="rounded-2xl bg-white/10 p-4"><p class="text-2xl font-black">3</p><p class="mt-1 text-xs font-semibold text-white/70">Lokasi</p></div>
+            </div>
+        </section>
+
+        <section class="flex items-center justify-center px-5 py-10">
+            <div class="w-full max-w-3xl rounded-[28px] border border-slate-200 bg-white p-6 shadow-xl shadow-slate-200/60 md:p-8">
+                <div class="mb-8 flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+                    <div>
+                        <p class="text-xs font-black uppercase tracking-[.22em] text-slate-400">RESQ Mitra</p>
+                        <h2 class="mt-2 text-3xl font-black text-resqBlue">Profil toko wajib</h2>
+                        <p class="mt-2 text-sm font-semibold leading-6 text-slate-500">Isi data berikut satu kali setelah akun mitra dibuat.</p>
+                    </div>
+                    <button id="btn-logout-onboarding" class="rounded-full border border-slate-200 px-4 py-2 text-xs font-black text-slate-600 transition hover:bg-slate-50">Keluar</button>
+                </div>
+
+                <div class="grid gap-5 md:grid-cols-2">
+                    <label class="block rounded-2xl border border-slate-200 bg-slate-50 p-4">
+                        <span class="text-sm font-black text-resqBlue">Logo toko</span>
+                        <span class="mt-1 block text-xs font-semibold text-slate-500">PNG/JPG, digunakan di dashboard dan profil toko.</span>
+                        <input id="partner-logo" type="file" accept="image/*" class="mt-4 block w-full text-sm font-semibold text-slate-600 file:mr-4 file:rounded-full file:border-0 file:bg-resqBlue file:px-4 file:py-2 file:text-sm file:font-black file:text-white">
+                        <img id="logo-preview" alt="Preview logo toko" class="mt-4 hidden h-32 w-full rounded-xl bg-white object-contain p-3">
+                    </label>
+
+                    <label class="block rounded-2xl border border-slate-200 bg-slate-50 p-4">
+                        <span class="text-sm font-black text-resqBlue">Foto makanan utama</span>
+                        <span class="mt-1 block text-xs font-semibold text-slate-500">Foto makanan surplus terbaik dari toko kamu.</span>
+                        <input id="partner-food-photo" type="file" accept="image/*" class="mt-4 block w-full text-sm font-semibold text-slate-600 file:mr-4 file:rounded-full file:border-0 file:bg-resqBlue file:px-4 file:py-2 file:text-sm file:font-black file:text-white">
+                        <img id="food-preview" alt="Preview foto makanan" class="mt-4 hidden h-32 w-full rounded-xl bg-white object-contain p-3">
+                    </label>
+                </div>
+
+                <section class="mt-5 rounded-2xl border border-slate-200 bg-slate-50 p-4">
+                    <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                        <div>
+                            <h3 class="text-sm font-black text-resqBlue">Lokasi toko</h3>
+                            <p class="mt-1 text-xs font-semibold text-slate-500">Klik tombol lokasi saat berada di toko atau titik pickup.</p>
+                        </div>
+                        <button id="btn-use-location" class="inline-flex items-center justify-center gap-2 rounded-full bg-resqYellow px-4 py-2 text-xs font-black text-resqNavy transition hover:bg-yellow-400">
+                            <i data-lucide="map-pin" class="h-4 w-4"></i>
+                            Gunakan lokasi saya
+                        </button>
+                    </div>
+                    <div id="location-status" class="mt-4 rounded-xl bg-white px-4 py-3 text-sm font-bold text-slate-500">
+                        Lokasi belum diambil.
+                    </div>
+                    <label class="mt-4 block text-sm font-bold text-resqBlue">Alamat pickup
+                        <textarea id="partner-address" rows="3" placeholder="Alamat lengkap toko atau titik pickup" class="mt-2 w-full resize-none rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm font-semibold outline-none focus:border-resqBlue"></textarea>
+                    </label>
+                </section>
+
+                <p id="partner-onboarding-error" class="mt-5 hidden rounded-2xl bg-red-50 px-4 py-3 text-sm font-bold text-red-600"></p>
+
+                <button id="btn-save-partner-profile" class="mt-6 w-full rounded-2xl bg-resqBlue py-3.5 text-sm font-black text-white transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-60">
+                    Simpan dan masuk dashboard
+                </button>
+            </div>
+        </section>
+    </main>
+
+    <script type="module" src="./assets/js/partner-onboarding.js"></script>
+</body>
+</html>

@@ -1,12 +1,15 @@
 import { realtimeDb, ref, get } from "./firebase.js";
 
+const LOCAL_MENUS_KEY = "resq_partner_uploaded_menus";
+const LOCAL_ORDERS_KEY = "resq_user_orders";
+
 export async function loadAdminData() {
     const [menusSnapshot, ordersSnapshot] = await Promise.all([
-        get(ref(realtimeDb, "menus")),
-        get(ref(realtimeDb, "orders"))
+        safeGet("menus"),
+        safeGet("orders")
     ]);
 
-    const menus = snapshotToList(menusSnapshot).map((item) => ({
+    const menus = mergeById(snapshotToList(menusSnapshot), readLocalList(LOCAL_MENUS_KEY)).map((item) => ({
         id: item.id,
         name: item.name || "Menu tanpa nama",
         restaurantId: item.restaurant_id || "Toko belum diatur",
@@ -15,11 +18,13 @@ export async function loadAdminData() {
         description: item.description || "",
         image: item.image_url || item.image || "",
         imageUrl: item.image_url || item.imageUrl || item.image || "",
-        updatedAt: item.updated_at || item.created_at || null,
+        updatedAt: item.updated_at || item.created_at || item.firebase_created_at || null,
+        category: item.category || item.kategori || "",
+        expiredAt: item.expired_at || item.expiredAt || "",
         partnerUid: item.partner_uid || null
     }));
 
-    const orders = snapshotToList(ordersSnapshot).map((item) => ({
+    const orders = mergeById(snapshotToList(ordersSnapshot), readLocalList(LOCAL_ORDERS_KEY)).map((item) => ({
         id: item.id,
         customerEmail: item.customer_email || "customer@resq.com",
         productName: item.product_name || "Menu tidak diketahui",
@@ -39,10 +44,19 @@ export async function loadAdminData() {
     return { menus, orders };
 }
 
+async function safeGet(path) {
+    try {
+        return await get(ref(realtimeDb, path));
+    } catch (error) {
+        console.warn(`Firebase read failed for ${path}; using local fallback.`, error);
+        return null;
+    }
+}
+
 export function filterDataForPartner(data, partnerProfile) {
     if (!partnerProfile || partnerProfile.is_system_admin) return data;
 
-    const storeName = partnerProfile.store_name || partnerProfile.storeName || "";
+    const storeName = getPartnerDisplayName(partnerProfile);
     const belongsToPartner = (item) => {
         if (item.partnerUid && item.partnerUid === partnerProfile.id) return true;
         return storeName && item.restaurantId === storeName;
@@ -65,6 +79,20 @@ export function getPrimaryStoreName(menus, orders) {
 
     const sorted = [...counts.entries()].sort((a, b) => b[1] - a[1]);
     return sorted[0]?.[0] || "Nama Toko";
+}
+
+export function getPartnerDisplayName(profile) {
+    if (!profile) return "Mitra RESQ";
+    return getEmailDisplayName(profile.email) || profile.store_name || profile.storeName || profile.owner_name || "Mitra RESQ";
+}
+
+export function getEmailDisplayName(email) {
+    return String(email || "")
+        .split("@")[0]
+        .split(/[._-]+/)
+        .filter(Boolean)
+        .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+        .join(" ");
 }
 
 export function getStatusStyle(status) {
@@ -132,6 +160,7 @@ export function emptyRow(message, colspan = 4) {
 
 function snapshotToList(snapshot) {
     const items = [];
+    if (!snapshot) return items;
 
     snapshot.forEach((childSnapshot) => {
         items.push({
@@ -141,4 +170,22 @@ function snapshotToList(snapshot) {
     });
 
     return items;
+}
+
+function readLocalList(key) {
+    try {
+        return JSON.parse(localStorage.getItem(key) || "[]");
+    } catch (error) {
+        console.error(`Local data read error for ${key}:`, error);
+        return [];
+    }
+}
+
+function mergeById(primary, secondary) {
+    const items = new Map();
+    [...secondary, ...primary].forEach((item) => {
+        const id = item.id || item.local_id || `${item.name || item.product_name}-${item.created_at || item.timestamp || Math.random()}`;
+        items.set(id, { ...item, id });
+    });
+    return [...items.values()];
 }

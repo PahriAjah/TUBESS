@@ -29,6 +29,8 @@ const latestMenuContainer = byId("latest-menu");
 const recommendationContainer = byId("rekomendasi-menu");
 const profileNameInput = byId("profile-name");
 const profileEmailInput = byId("profile-email");
+const LOCAL_MENUS_KEY = "resq_partner_uploaded_menus";
+const LOCAL_ORDERS_KEY = "resq_user_orders";
 
 const emptySummary = byId("ringkasan-kosong");
 const orderSummary = byId("ringkasan-pesanan");
@@ -363,7 +365,8 @@ confirmButton?.addEventListener("click", async () => {
     const pickupCode = "RESQ-" + Math.random().toString(36).substring(2, 6).toUpperCase();
 
     try {
-        await push(ref(realtimeDb, "orders"), {
+        const orderPayload = {
+            id: `local-order-${Date.now()}`,
             product_name: selectedMenu.name,
             product_id: selectedMenu.id,
             restaurant_id: selectedMenu.restaurantId,
@@ -374,8 +377,17 @@ confirmButton?.addEventListener("click", async () => {
             pickup_code: pickupCode,
             customer_email: userEmail,
             status: "Diproses",
-            timestamp: serverTimestamp()
-        });
+            timestamp: Date.now(),
+            firebase_timestamp: serverTimestamp()
+        };
+
+        saveLocalListItem(LOCAL_ORDERS_KEY, orderPayload);
+
+        try {
+            await push(ref(realtimeDb, "orders"), orderPayload);
+        } catch (error) {
+            console.warn("Order saved locally because Firebase write failed:", error);
+        }
 
         closeModal();
         clearSelection();
@@ -394,79 +406,80 @@ confirmButton?.addEventListener("click", async () => {
 });
 
 async function loadMenus() {
+    let data = readLocalList(LOCAL_MENUS_KEY);
+
     try {
         const snapshot = await get(ref(realtimeDb, "menus"));
-        const data = [];
+        const firebaseMenus = [];
 
         snapshot.forEach((childSnapshot) => {
-            const val = childSnapshot.val();
-            // childSnapshot.key is the definitive Firebase ID
-            data.push({ ...val, firebaseId: childSnapshot.key });
+            firebaseMenus.push({ id: childSnapshot.key, ...childSnapshot.val() });
         });
 
-        const uniquePartners = [...new Set(data.map(item => item.restaurant_id || "Partner RESQ"))];
-        
-        menus = [];
-        data.forEach((item) => {
-            const partner = item.restaurant_id || "Partner RESQ";
-            const i = uniquePartners.indexOf(partner);
-            const lat = -6.9147 + (Math.sin(i * 1.5) * 0.02);
-            const lng = 107.6098 + (Math.cos(i * 1.5) * 0.02);
-            
-            menus.push({
-                id: item.firebaseId, // Use the key we just saved
-                name: item.name || "Menu RESQ",
-                stock: Number(item.stock) || 0,
-                price: Number(item.surplus_price) || 0,
-                restaurantId: partner,
-                category: normalizeCategory(item.category || item.kategori || item.type || item.name),
-                imageUrl: item.image_url || item.imageUrl || "./assets/burger-signin.png",
-                partnerUid: item.partner_uid || "",
-                lat: lat,
-                lng: lng
-            });
-        });
-
-        updateStats();
-        renderMenus();
-        renderDashboardMenus();
+        data = mergeById(data, firebaseMenus);
     } catch (error) {
-        console.error("Menu error:", error);
-        if (menuContainer) menuContainer.innerHTML = emptyState("Gagal memuat menu. Silakan coba lagi nanti.");
-        if (resultCount) resultCount.innerText = "Gagal memuat";
-        if (latestMenuContainer) latestMenuContainer.innerHTML = emptyState("Gagal memuat makanan terbaru.");
-        if (recommendationContainer) recommendationContainer.innerHTML = emptyState("Gagal memuat rekomendasi.");
+        console.warn("Menu Firebase read failed; using local menus.", error);
     }
+
+    const uniquePartners = [...new Set(data.map(item => item.restaurant_id || "Partner RESQ"))];
+
+    menus = data.map((item) => {
+        const partner = item.restaurant_id || "Partner RESQ";
+        const i = uniquePartners.indexOf(partner);
+        const lat = item.latitude || item.location?.lat || -6.9147 + (Math.sin(i * 1.5) * 0.02);
+        const lng = item.longitude || item.location?.lng || 107.6098 + (Math.cos(i * 1.5) * 0.02);
+
+        return {
+            id: item.id,
+            name: item.name || "Menu RESQ",
+            stock: Number(item.stock) || 0,
+            price: Number(item.surplus_price || item.price) || 0,
+            restaurantId: partner,
+            category: normalizeCategory(item.category || item.kategori || item.type || item.name),
+            imageUrl: item.image_url || item.imageUrl || item.image || "./assets/burger-signin.png",
+            partnerUid: item.partner_uid || "",
+            lat,
+            lng
+        };
+    }).filter((item) => item.name && item.price > 0);
+
+    updateStats();
+    renderMenus();
+    renderDashboardMenus();
 }
 
 async function loadOrders() {
+    let rawOrders = readLocalList(LOCAL_ORDERS_KEY);
+
     try {
         const snapshot = await get(ref(realtimeDb, "orders"));
-        const orders = [];
+        const firebaseOrders = [];
 
         snapshot.forEach((childSnapshot) => {
-            const item = childSnapshot.val();
-            if (item.customer_email === userEmail) {
-                orders.push({
-                    id: childSnapshot.key,
-                    name: item.product_name || "Pesanan RESQ",
-                    price: Number(item.total_price) || 0,
-                    method: item.payment_method || "-",
-                    code: item.pickup_code || "-",
-                    status: normalizeOrderStatus(item.status || "Diproses"),
-                    timestamp: item.timestamp || 0
-                });
-            }
+            firebaseOrders.push({ id: childSnapshot.key, ...childSnapshot.val() });
         });
 
-        orders.sort((a, b) => Number(b.timestamp) - Number(a.timestamp));
-        userOrders = orders;
-        renderOrders(orders);
-        updateStats();
+        rawOrders = mergeById(rawOrders, firebaseOrders);
     } catch (error) {
-        console.error("Order load error:", error);
-        orderList.innerHTML = `<p class="rounded-2xl bg-red-50 p-4 text-sm font-semibold text-red-600">Gagal memuat riwayat pesanan.</p>`;
+        console.warn("Order Firebase read failed; using local orders.", error);
     }
+
+    const orders = rawOrders
+        .filter((item) => item.customer_email === userEmail)
+        .map((item) => ({
+            id: item.id,
+            name: item.product_name || "Pesanan RESQ",
+            price: Number(item.total_price) || 0,
+            method: item.payment_method || "-",
+            code: item.pickup_code || "-",
+            status: normalizeOrderStatus(item.status || "Diproses"),
+            timestamp: item.timestamp || 0
+        }))
+        .sort((a, b) => Number(b.timestamp) - Number(a.timestamp));
+
+    userOrders = orders;
+    renderOrders(orders);
+    updateStats();
 }
 
 function renderMenus() {
@@ -892,6 +905,30 @@ function emptyState(message) {
             <p class="mt-4 text-sm font-bold text-slate-500">${escapeHtml(message)}</p>
         </div>
     `;
+}
+
+function readLocalList(key) {
+    try {
+        return JSON.parse(localStorage.getItem(key) || "[]");
+    } catch (error) {
+        console.error(`Local data read error for ${key}:`, error);
+        return [];
+    }
+}
+
+function saveLocalListItem(key, item) {
+    const list = readLocalList(key);
+    list.unshift(item);
+    localStorage.setItem(key, JSON.stringify(list));
+}
+
+function mergeById(primary, secondary) {
+    const items = new Map();
+    [...primary, ...secondary].forEach((item) => {
+        const id = item.id || item.local_id || `${item.product_id || item.name || item.product_name}-${item.created_at || item.timestamp || Math.random()}`;
+        items.set(id, { ...item, id });
+    });
+    return [...items.values()];
 }
 
 function openModal() {
