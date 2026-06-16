@@ -37,8 +37,12 @@ async function loadAdminDashboard(user, partnerProfile) {
     currentPartnerProfile = partnerProfile;
 
     const suspensionKey = `resq_suspended_${partnerProfile?.id || user?.uid}`;
-    if (localStorage.getItem(suspensionKey) === "true") {
+    const isStarbucks = user?.email === "starbuck@resq.com";
+
+    if (localStorage.getItem(suspensionKey) === "true" && !isStarbucks) {
         if (currentPartnerProfile) currentPartnerProfile.is_suspended = true;
+    } else if (isStarbucks) {
+        localStorage.removeItem(suspensionKey); // Clear it if it's starbucks
     }
 
     renderLayout(staticAdminData());
