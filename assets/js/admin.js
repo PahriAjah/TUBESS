@@ -1,5 +1,5 @@
 import { initAdminPage } from "./admin-shell.js";
-import { realtimeDb, ref, push, serverTimestamp } from "./firebase.js";
+import { realtimeDb, ref, push, update, serverTimestamp } from "./firebase.js";
 import {
     filterDataForPartner,
     getCustomerName,
@@ -462,18 +462,44 @@ function setupOrderInteractions(initialOrders = []) {
     elements.modal?.addEventListener("click", (event) => {
         if (event.target === elements.modal) closeOrderModal(elements.modal);
     });
-    elements.modalComplete?.addEventListener("click", () => {
+    elements.modalComplete?.addEventListener("click", async () => {
         const order = orders.find((item) => item.id === state.modalOrderId);
         if (!order) return;
 
         const inputCode = elements.modalInputCode.value.trim();
-        const correctCode = order.code;
+        const correctCode = String(order.code || "").trim();
 
         if (inputCode === correctCode) {
-            order.status = "Selesai";
-            order.color = statusColor(order.status);
-            closeOrderModal(elements.modal);
-            render();
+            elements.modalComplete.disabled = true;
+            elements.modalComplete.innerText = "Memproses...";
+
+            try {
+                // Update Firebase if it's a real Firebase ID (not local-order-*)
+                if (order.id && !order.id.includes("local-order")) {
+                    await update(ref(realtimeDb, `orders/${order.id}`), {
+                        status: "Selesai",
+                        completed_at: serverTimestamp()
+                    });
+                }
+
+                order.status = "Selesai";
+                order.color = statusColor(order.status);
+                
+                // Show success feedback
+                elements.modalStatus.innerHTML = renderStatusBadge("Selesai");
+                elements.modalCompletionZone.classList.add("hidden");
+                
+                setTimeout(() => {
+                    closeOrderModal(elements.modal);
+                    render();
+                }, 800);
+            } catch (error) {
+                console.error("Order completion error:", error);
+                elements.modalError.textContent = "Gagal memproses. Periksa koneksi internet.";
+                elements.modalError.classList.remove("hidden");
+                elements.modalComplete.disabled = false;
+                elements.modalComplete.innerText = "Tandai Selesai";
+            }
         } else {
             handleFailedAttempt(elements, state);
         }
@@ -526,7 +552,19 @@ function renderSuspendedState() {
 }
 
 function normalizeOrderView(order, index) {
-    const code = order.pickupCode || order.pickup_code || order.code || order.product?.sub || Math.floor(1000 + Math.random() * 9000).toString();
+    let rawCode = order.pickupCode || order.pickup_code || order.code || order.product?.sub;
+    
+    // If no code exists, create a stable one based on the order ID so it doesn't change
+    if (!rawCode || rawCode === "-") {
+        const seed = String(order.id || index);
+        let hash = 0;
+        for (let i = 0; i < seed.length; i++) {
+            hash = ((hash << 5) - hash + seed.charCodeAt(i)) | 0;
+        }
+        rawCode = String(1000 + Math.abs(hash) % 9000);
+    }
+
+    const code = String(rawCode).trim();
     const blurredCode = code.length > 0 ? code.slice(0, -1) + "•" : code;
     const recipient = order.customerName || order.customer_name || getCustomerName(order.customerEmail) || "Pelanggan RESQ";
     const status = normalizeAdminOrderStatus(order.status);
