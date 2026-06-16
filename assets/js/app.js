@@ -86,7 +86,7 @@ requireAuth(async (user) => {
     }
 
     userEmail = user.email;
-    const displayName = user.email.split("@")[0];
+    const displayName = user.displayName || user.email.split("@")[0];
     userName.innerText = displayName;
     userEmailLabel.innerText = user.email;
     userInitial.innerText = displayName.charAt(0).toUpperCase();
