@@ -14,8 +14,8 @@
             theme: {
                 extend: {
                     colors: {
-                        primary: "#005143",
-                        "primary-dark": "#003d33",
+                        primary: "#011837",
+                        "primary-dark": "#000a1a",
                         "secondary-container": "#fecb32",
                         surface: "#f7faf7",
                         "surface-container": "#ebefec",
@@ -92,7 +92,7 @@
             width: 12px;
             height: 12px;
             border-radius: 9999px;
-            background: #005143;
+            background: #011837;
         }
         .emission-card {
             position: relative;
@@ -109,9 +109,9 @@
             display: inline-flex;
             align-items: center;
             justify-content: center;
-            background: #005143;
+            background: #011837;
             color: #fff;
-            box-shadow: 0 12px 24px rgba(0,81,67,.24);
+            box-shadow: 0 12px 24px rgba(1, 24, 55, .24);
             animation: emissionPulse 1.8s ease-in-out infinite;
         }
         .emission-wave {
@@ -126,7 +126,7 @@
             width: 5px;
             height: 16px;
             border-radius: 999px;
-            background: #005143;
+            background: #011837;
             animation: barRise 1.2s ease-in-out infinite;
         }
         .emission-wave span:nth-child(2) { animation-delay: .15s; height: 24px; }
@@ -156,7 +156,6 @@
         </div>
         <div class="hidden items-center gap-3 md:flex">
             <a href="login.html?fresh=1" class="rounded-full border border-primary/20 px-5 py-2.5 font-semibold text-primary transition hover:bg-primary/5">Login</a>
-            <a href="register.html?role=partner" class="rounded-full border border-secondary-container bg-secondary-container/20 px-5 py-2.5 font-semibold text-[#705600] transition hover:bg-secondary-container/40">Daftar Mitra</a>
             <a href="register.html" class="flex items-center gap-2 rounded-full bg-primary px-6 py-3 font-semibold text-white transition hover:bg-primary-dark">
                 Sign Up <span class="material-symbols-outlined text-sm">arrow_forward</span>
             </a>
@@ -174,9 +173,8 @@
             <a data-mobile-nav href="#impact" class="rounded-2xl px-4 py-3 text-slate-600 hover:bg-surface-container hover:text-primary">Impact</a>
             <a data-mobile-nav href="#contact" class="rounded-2xl px-4 py-3 text-slate-600 hover:bg-surface-container hover:text-primary">Contact</a>
         </div>
-        <div class="mt-4 grid grid-cols-2 gap-3">
+        <div class="mt-4 flex flex-col gap-3">
             <a href="login.html?fresh=1" class="rounded-full border border-primary/20 px-4 py-3 text-center font-semibold text-primary">Login</a>
-            <a href="register.html?role=partner" class="rounded-full bg-primary px-4 py-3 text-center font-semibold text-white">Daftar Mitra</a>
         </div>
     </div>
 
