@@ -70,13 +70,40 @@ function renderLayout(data) {
 }
 
 function setupPartnerProductForm() {
-    const form = document.getElementById("partner-product-form");
+    const modal = document.getElementById("product-upload-modal");
+    const openBtn = document.getElementById("btn-open-product-modal");
+    const closeBtn = document.getElementById("product-modal-close");
+    const closeIcon = document.getElementById("product-modal-close-icon");
     const saveButton = document.getElementById("btn-save-partner-menu");
-    if (!form || !saveButton) return;
 
-    document.querySelector("[data-focus-product-form]")?.addEventListener("click", () => {
-        form.scrollIntoView({ behavior: "smooth", block: "start" });
-        document.getElementById("partner-menu-name")?.focus();
+    if (!modal || !saveButton) return;
+
+    const openModal = () => {
+        modal.classList.remove("hidden");
+        modal.classList.add("flex");
+        requestAnimationFrame(() => {
+            modal.classList.remove("opacity-0");
+            modal.querySelector("div")?.classList.remove("scale-95");
+        });
+    };
+
+    const closeModal = () => {
+        modal.classList.add("opacity-0");
+        modal.querySelector("div")?.classList.add("scale-95");
+        setTimeout(() => {
+            modal.classList.add("hidden");
+            modal.classList.remove("flex");
+            clearPartnerMenuForm();
+            const message = document.getElementById("partner-menu-message");
+            if (message) message.classList.add("hidden");
+        }, 200);
+    };
+
+    openBtn?.addEventListener("click", openModal);
+    closeBtn?.addEventListener("click", closeModal);
+    closeIcon?.addEventListener("click", closeModal);
+    modal.addEventListener("click", (e) => {
+        if (e.target === modal) closeModal();
     });
 
     saveButton.addEventListener("click", async () => {
@@ -95,14 +122,15 @@ function setupPartnerProductForm() {
                 console.warn("Menu saved locally because Firebase write failed:", error);
             }
 
-            clearPartnerMenuForm();
-            showPartnerMenuMessage(message, "Menu berhasil disimpan dan akan tampil di halaman user.", "success");
-            await loadAdminDashboard(currentAdminUser, currentPartnerProfile);
+            showPartnerMenuMessage(message, "Menu berhasil disimpan!", "success");
+            setTimeout(async () => {
+                closeModal();
+                await loadAdminDashboard(currentAdminUser, currentPartnerProfile);
+            }, 1000);
         } catch (error) {
             showPartnerMenuMessage(message, error.message || "Gagal menyimpan menu.", "error");
-        } finally {
             saveButton.disabled = false;
-            saveButton.innerText = "Simpan menu";
+            saveButton.innerText = "Simpan Produk";
         }
     });
 }
@@ -120,7 +148,10 @@ async function buildPartnerMenuPayload() {
     if (!stock || stock < 1) throw new Error("Stok porsi wajib diisi.");
 
     const storeName = getPartnerDisplayName(currentPartnerProfile);
-    const imageData = imageFile ? await readImageAsDataUrl(imageFile) : currentPartnerProfile?.food_photo_data || "./assets/burger-signin.png";
+    const imageData = imageFile ? await readImageAsDataUrl(imageFile) : "./assets/burger-signin.png";
+
+    // IMPORTANT: Ensure partner_uid is consistent for visibility
+    const partnerUid = currentPartnerProfile?.id || currentAdminUser?.uid || "";
 
     return {
         id: `local-menu-${Date.now()}`,
@@ -132,7 +163,7 @@ async function buildPartnerMenuPayload() {
         expired_at: expired,
         image_url: imageData,
         restaurant_id: storeName,
-        partner_uid: currentAdminUser?.uid || currentPartnerProfile?.id || "",
+        partner_uid: partnerUid,
         created_at: Date.now(),
         firebase_created_at: serverTimestamp()
     };

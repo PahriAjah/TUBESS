@@ -437,7 +437,7 @@ function renderMessages(data) {
 function renderProducts(data) {
     return `
         ${pageHeader("produk", "Produk", "Kelola katalog produk surplus toko Anda", `
-            <button data-focus-product-form class="inline-flex cursor-pointer items-center justify-center gap-2 rounded-lg bg-resq-navy px-4 py-2 text-sm font-semibold text-white transition hover:opacity-90">
+            <button id="btn-open-product-modal" class="inline-flex cursor-pointer items-center justify-center gap-2 rounded-lg bg-resq-navy px-4 py-2 text-sm font-semibold text-white transition hover:opacity-90">
                 ${icon("plus", "h-4 w-4")}
                 <span>Tambah Produk</span>
             </button>
@@ -445,41 +445,57 @@ function renderProducts(data) {
         ${tabs([{ label: "Semua", count: 128 }, { label: "Bakery", count: 38 }, { label: "Ready Meal", count: 42 }, { label: "Vegetables", count: 29 }, { label: "Dairy", count: 19 }])}
         ${toolbar("Cari produk...")}
 
-        <section id="partner-product-form" class="mb-6 rounded-xl border border-gray-200 bg-white p-5 shadow-sm">
-            <div class="mb-5">
-                <h3 class="text-lg font-bold text-resq-navy">Upload makanan surplus</h3>
-                <p class="mt-1 text-sm text-gray-500">Menu yang disimpan di sini akan muncul di halaman user.</p>
+        <div id="product-upload-modal" class="fixed inset-0 z-50 hidden items-center justify-center bg-resq-navy/40 p-4 opacity-0 transition-opacity duration-200">
+            <div class="w-full max-w-2xl scale-95 rounded-xl border border-gray-200 bg-white p-6 shadow-xl transition-transform duration-200">
+                <div class="mb-5 flex items-start justify-between">
+                    <div>
+                        <h3 class="text-xl font-bold text-resq-navy">Tambah Produk Baru</h3>
+                        <p class="mt-1 text-sm text-gray-500">Isi detail makanan surplus yang ingin Anda jual.</p>
+                    </div>
+                    <button id="product-modal-close-icon" type="button" class="grid h-9 w-9 cursor-pointer place-items-center rounded-lg border border-gray-200 text-gray-500 transition-all duration-200 hover:bg-gray-50 hover:text-resq-navy">
+                        ${icon("x", "h-4 w-4")}
+                    </button>
+                </div>
+                
+                <div class="grid gap-4 md:grid-cols-2">
+                    <label class="block">
+                        <span class="text-sm font-semibold text-resq-navy">Nama Makanan</span>
+                        <input id="partner-menu-name" class="mt-2 h-11 w-full rounded-lg border border-gray-200 px-3 text-sm outline-none transition focus:border-resq-navy" placeholder="Contoh: Croissant Butter">
+                    </label>
+                    <label class="block">
+                        <span class="text-sm font-semibold text-resq-navy">Kategori</span>
+                        <select id="partner-menu-category" class="mt-2 h-11 w-full rounded-lg border border-gray-200 px-3 text-sm outline-none transition focus:border-resq-navy">
+                            <option value="Ready Meal">Ready Meal</option>
+                            <option value="Bakery">Bakery</option>
+                            <option value="Sayur & Buah">Sayur & Buah</option>
+                            <option value="Dairy">Dairy</option>
+                        </select>
+                    </label>
+                    <label class="block">
+                        <span class="text-sm font-semibold text-resq-navy">Harga Surplus (Rp)</span>
+                        <input id="partner-menu-price" type="number" min="0" class="mt-2 h-11 w-full rounded-lg border border-gray-200 px-3 text-sm outline-none transition focus:border-resq-navy" placeholder="15000">
+                    </label>
+                    <label class="block">
+                        <span class="text-sm font-semibold text-resq-navy">Stok Porsi</span>
+                        <input id="partner-menu-stock" type="number" min="1" class="mt-2 h-11 w-full rounded-lg border border-gray-200 px-3 text-sm outline-none transition focus:border-resq-navy" placeholder="10">
+                    </label>
+                    <label class="block">
+                        <span class="text-sm font-semibold text-resq-navy">Batas Waktu Pickup</span>
+                        <input id="partner-menu-expired" class="mt-2 h-11 w-full rounded-lg border border-gray-200 px-3 text-sm outline-none transition focus:border-resq-navy" placeholder="Hari ini, 22:00">
+                    </label>
+                    <label class="block">
+                        <span class="text-sm font-semibold text-resq-navy">Foto Makanan</span>
+                        <input id="partner-menu-image" type="file" accept="image/*" class="mt-2 block w-full text-sm font-semibold text-gray-600 file:mr-4 file:rounded-lg file:border-0 file:bg-resq-navy file:px-4 file:py-2.5 file:text-sm file:font-bold file:text-white">
+                    </label>
+                </div>
+
+                <div class="mt-8 flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
+                    <button id="product-modal-close" type="button" class="cursor-pointer rounded-lg border border-gray-200 px-6 py-2.5 text-sm font-semibold text-gray-600 transition-all duration-200 hover:bg-gray-50">Batal</button>
+                    <button id="btn-save-partner-menu" type="button" class="cursor-pointer rounded-lg bg-resq-navy px-6 py-2.5 text-sm font-bold text-white transition-all duration-200 hover:opacity-90">Simpan Produk</button>
+                </div>
+                <p id="partner-menu-message" class="mt-4 hidden rounded-lg px-4 py-3 text-sm font-semibold"></p>
             </div>
-            <div class="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-                <label class="text-sm font-semibold text-resq-navy">Nama makanan
-                    <input id="partner-menu-name" class="mt-2 h-11 w-full rounded-lg border border-gray-200 px-3 text-sm outline-none transition focus:border-resq-navy" placeholder="Croissant Butter">
-                </label>
-                <label class="text-sm font-semibold text-resq-navy">Kategori
-                    <select id="partner-menu-category" class="mt-2 h-11 w-full rounded-lg border border-gray-200 px-3 text-sm outline-none transition focus:border-resq-navy">
-                        <option value="Ready Meal">Ready Meal</option>
-                        <option value="Bakery">Bakery</option>
-                        <option value="Sayur & Buah">Sayur & Buah</option>
-                        <option value="Dairy">Dairy</option>
-                    </select>
-                </label>
-                <label class="text-sm font-semibold text-resq-navy">Harga surplus
-                    <input id="partner-menu-price" type="number" min="0" class="mt-2 h-11 w-full rounded-lg border border-gray-200 px-3 text-sm outline-none transition focus:border-resq-navy" placeholder="15000">
-                </label>
-                <label class="text-sm font-semibold text-resq-navy">Stok porsi
-                    <input id="partner-menu-stock" type="number" min="1" class="mt-2 h-11 w-full rounded-lg border border-gray-200 px-3 text-sm outline-none transition focus:border-resq-navy" placeholder="10">
-                </label>
-            </div>
-            <div class="mt-4 grid gap-4 md:grid-cols-[1fr_1fr_auto] md:items-end">
-                <label class="text-sm font-semibold text-resq-navy">Expired / pickup terakhir
-                    <input id="partner-menu-expired" class="mt-2 h-11 w-full rounded-lg border border-gray-200 px-3 text-sm outline-none transition focus:border-resq-navy" placeholder="Hari ini, 22:00">
-                </label>
-                <label class="text-sm font-semibold text-resq-navy">Foto makanan
-                    <input id="partner-menu-image" type="file" accept="image/*" class="mt-2 block w-full text-sm font-semibold text-gray-600 file:mr-4 file:rounded-lg file:border-0 file:bg-resq-navy file:px-4 file:py-2.5 file:text-sm file:font-bold file:text-white">
-                </label>
-                <button id="btn-save-partner-menu" class="h-11 rounded-lg bg-resq-navy px-5 text-sm font-bold text-white transition hover:opacity-90">Simpan menu</button>
-            </div>
-            <p id="partner-menu-message" class="mt-4 hidden rounded-lg px-4 py-3 text-sm font-semibold"></p>
-        </section>
+        </div>
 
         <div class="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
             ${data.products.map((product) => `
