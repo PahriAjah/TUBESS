@@ -262,19 +262,103 @@ function renderDashboard(data) {
 }
 
 function renderOrders(data) {
+    const orderStats = buildOrderStats(data.orders);
+
     return `
         ${pageHeader("pesanan", "Pesanan", "Kelola pesanan makanan surplus dari pelanggan toko Anda")}
-        ${statGrid(data.orderStats)}
-        ${tabs([{ label: "Semua", count: data.orders.length }, { label: "Selesai", count: 31 }, { label: "Diproses", count: 4 }, { label: "Dibatalkan", count: 2 }])}
-        ${toolbar("Cari makanan...")}
-        ${table(["", "Nama Produk", "Harga", "Status", "Jadwal Pickup"], data.orders.map((orderItem) => row([
-            `<input type="checkbox" aria-label="Pilih ${escapeHtml(orderItem.product.name)}">`,
-            productCell(orderItem.product),
-            orderItem.price,
-            badge(orderItem.color, orderItem.status),
-            orderItem.pickup
-        ])).join(""))}
+        <section id="orders-page" data-orders-page>
+            <div id="order-stats-grid">
+                ${statGrid(orderStats)}
+            </div>
+
+            <div id="order-tabs" class="mb-6 flex items-center space-x-8 overflow-x-auto border-b border-gray-200">
+                ${["Semua", "Selesai", "Diproses", "Dibatalkan"].map((status, index) => `
+                    <button type="button" data-order-status="${status}" class="order-tab shrink-0 cursor-pointer border-b-2 pb-3 text-sm transition-all duration-200 ${index === 0 ? "border-resq-navy font-bold text-resq-navy" : "border-transparent font-medium text-gray-500 hover:text-resq-navy"}">
+                        ${status} <span data-order-tab-count="${status}" class="ml-1 font-medium ${index === 0 ? "text-gray-500" : "text-gray-400"}">0</span>
+                    </button>
+                `).join("")}
+            </div>
+
+            <div class="mb-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                <div class="relative w-full sm:w-80">
+                    ${icon("search", "absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400")}
+                    <input id="order-search" type="search" placeholder="Cari produk atau kode pesanan..." class="w-full rounded-lg border border-gray-200 py-2 pl-10 pr-4 text-sm outline-none transition-all duration-200 focus:border-resq-navy focus:ring-1 focus:ring-resq-navy">
+                </div>
+                <div class="relative">
+                    <button id="order-filter-button" type="button" class="inline-flex cursor-pointer items-center justify-center space-x-2 rounded-lg border border-gray-200 px-4 py-2 text-sm font-medium text-gray-600 transition-all duration-200 hover:bg-gray-50 hover:text-resq-navy">
+                        ${icon("sliders-horizontal", "h-4 w-4")}
+                        <span>Filter</span>
+                    </button>
+                    <div id="order-filter-menu" class="absolute right-0 z-20 mt-2 hidden w-48 overflow-hidden rounded-lg border border-gray-200 bg-white py-1 shadow-lg transition-all duration-200">
+                        ${["Terbaru", "Terlama", "Harga terendah", "Harga tertinggi"].map((label) => `
+                            <button type="button" data-order-sort="${label}" class="block w-full cursor-pointer px-4 py-2 text-left text-sm font-medium text-gray-600 transition-colors duration-200 hover:bg-gray-50 hover:text-resq-navy">${label}</button>
+                        `).join("")}
+                    </div>
+                </div>
+            </div>
+
+            <div id="order-action-bar" class="mb-4 hidden items-center justify-between gap-3 rounded-xl border border-gray-200 bg-white p-3 shadow-sm transition-all duration-200">
+                <p class="text-sm font-semibold text-gray-600"><span id="selected-order-count">0</span> pesanan dipilih</p>
+                <div class="flex flex-wrap gap-2">
+                    <button type="button" data-order-bulk="complete" class="cursor-pointer rounded-lg bg-resq-navy px-4 py-2 text-sm font-semibold text-white transition-all duration-200 hover:opacity-90">Tandai selesai</button>
+                    <button type="button" data-order-bulk="cancel" class="cursor-pointer rounded-lg border border-red-200 px-4 py-2 text-sm font-semibold text-red-600 transition-all duration-200 hover:bg-red-50">Batalkan pesanan</button>
+                    <button type="button" data-order-bulk="clear" class="cursor-pointer rounded-lg border border-gray-200 px-4 py-2 text-sm font-semibold text-gray-600 transition-all duration-200 hover:bg-gray-50">Hapus pilihan</button>
+                </div>
+            </div>
+
+            <div class="w-full overflow-x-auto rounded-xl border border-gray-200 bg-resq-white shadow-sm">
+                <table class="w-full min-w-[760px] border-collapse text-left">
+                    <thead>
+                        <tr class="border-b border-gray-100 text-sm font-medium text-gray-500">
+                            ${["", "Nama Produk", "Harga", "Status", "Jadwal Pickup"].map((header) => `<th class="py-3 pl-4 font-medium">${header}</th>`).join("")}
+                        </tr>
+                    </thead>
+                    <tbody id="orders-table-body" class="text-sm"></tbody>
+                </table>
+                <p id="orders-empty-state" class="hidden px-5 py-8 text-center text-sm font-semibold text-gray-500">Tidak ada pesanan yang cocok.</p>
+            </div>
+        </section>
+
+        <div id="order-detail-modal" class="fixed inset-0 z-50 hidden items-center justify-center bg-resq-navy/40 p-4 opacity-0 transition-opacity duration-200">
+            <div class="w-full max-w-md scale-95 rounded-xl border border-gray-200 bg-white p-5 shadow-xl transition-transform duration-200">
+                <div class="mb-4 flex items-start justify-between gap-4">
+                    <div>
+                        <p class="text-xs font-semibold uppercase tracking-wider text-gray-400">Detail Pesanan</p>
+                        <h3 id="modal-order-name" class="mt-1 text-xl font-bold text-resq-navy"></h3>
+                    </div>
+                    <button id="order-modal-close-icon" type="button" class="grid h-9 w-9 cursor-pointer place-items-center rounded-lg border border-gray-200 text-gray-500 transition-all duration-200 hover:bg-gray-50 hover:text-resq-navy" aria-label="Tutup modal">
+                        ${icon("x", "h-4 w-4")}
+                    </button>
+                </div>
+                <dl class="space-y-3 text-sm">
+                    <div class="flex justify-between gap-4 border-b border-gray-100 pb-3"><dt class="text-gray-500">Kode pesanan</dt><dd id="modal-order-code" class="font-bold text-resq-navy"></dd></div>
+                    <div class="flex justify-between gap-4 border-b border-gray-100 pb-3"><dt class="text-gray-500">Harga</dt><dd id="modal-order-price" class="font-bold text-resq-navy"></dd></div>
+                    <div class="flex justify-between gap-4 border-b border-gray-100 pb-3"><dt class="text-gray-500">Status</dt><dd id="modal-order-status"></dd></div>
+                    <div class="flex justify-between gap-4"><dt class="text-gray-500">Jadwal pickup</dt><dd id="modal-order-pickup" class="font-bold text-resq-navy"></dd></div>
+                </dl>
+                <div class="mt-6 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
+                    <button id="order-modal-close" type="button" class="cursor-pointer rounded-lg border border-gray-200 px-4 py-2 text-sm font-semibold text-gray-600 transition-all duration-200 hover:bg-gray-50">Tutup</button>
+                    <button id="order-modal-complete" type="button" class="cursor-pointer rounded-lg bg-resq-navy px-4 py-2 text-sm font-semibold text-white transition-all duration-200 hover:opacity-90">Tandai selesai</button>
+                </div>
+            </div>
+        </div>
     `;
+}
+
+function buildOrderStats(orders) {
+    return [
+        { icon: "box", label: "Total pesanan", value: orders.length.toLocaleString("id-ID") },
+        { icon: "clock", label: "Menunggu pickup", value: orders.filter((order) => getOrderStatusGroup(order.status) === "Diproses").length.toLocaleString("id-ID") },
+        { icon: "x-octagon", label: "Dibatalkan", value: orders.filter((order) => getOrderStatusGroup(order.status) === "Dibatalkan").length.toLocaleString("id-ID") },
+        { icon: "shopping-bag", label: "Pesanan selesai", value: orders.filter((order) => getOrderStatusGroup(order.status) === "Selesai").length.toLocaleString("id-ID") }
+    ];
+}
+
+function getOrderStatusGroup(status) {
+    const normalized = String(status || "").toLowerCase();
+    if (normalized.includes("selesai") || normalized.includes("diambil") || normalized.includes("picked") || normalized.includes("complete")) return "Selesai";
+    if (normalized.includes("batal") || normalized.includes("cancel") || normalized.includes("gagal")) return "Dibatalkan";
+    return "Diproses";
 }
 
 function renderInventory(data) {

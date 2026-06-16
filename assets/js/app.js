@@ -8,7 +8,10 @@ const userName = byId("nama-user");
 const userEmailLabel = byId("email-user");
 const userInitial = byId("user-initial");
 const logoutButton = byId("btn-logout");
+const logoutTopButton = byId("btn-logout-top");
 const searchInput = byId("input-cari");
+const dashboardSearchInput = byId("dashboard-search");
+const dashboardSortButton = byId("dashboard-sort");
 const categoryFilter = byId("filter-kategori");
 const stockFilter = byId("filter-stok");
 const resetFilterButton = byId("btn-reset-filter");
@@ -65,6 +68,9 @@ let resqMap = null;
 let userLocation = null;
 let userMarker = null;
 let favoriteIds = new Set();
+let dashboardQuery = "";
+let dashboardCategory = "all";
+let dashboardSort = "latest";
 
 requireAuth(async (user) => {
     if (await isPartnerAccount(user)) {
@@ -92,6 +98,11 @@ logoutButton?.addEventListener("click", async () => {
     window.location.href = "index.html";
 });
 
+logoutTopButton?.addEventListener("click", async () => {
+    await signOut(auth);
+    window.location.href = "index.html";
+});
+
 searchInput?.addEventListener("input", renderMenus);
 categoryFilter?.addEventListener("change", renderMenus);
 stockFilter?.addEventListener("change", renderMenus);
@@ -104,6 +115,38 @@ resetFilterButton?.addEventListener("click", () => {
     syncFilterDropdown(categoryFilter);
     syncFilterDropdown(stockFilter);
     renderMenus();
+});
+
+dashboardSearchInput?.addEventListener("input", (event) => {
+    dashboardQuery = event.target.value.trim().toLowerCase();
+    renderDashboardMenus();
+});
+
+document.querySelectorAll("[data-dashboard-category]").forEach((button) => {
+    button.addEventListener("click", () => {
+        dashboardCategory = button.dataset.dashboardCategory || "all";
+        document.querySelectorAll("[data-dashboard-category]").forEach((item) => {
+            const isActive = item === button;
+            item.classList.toggle("bg-resqBlue", isActive);
+            item.classList.toggle("text-white", isActive);
+            item.classList.toggle("bg-white", !isActive);
+            item.classList.toggle("text-slate-700", !isActive);
+            item.classList.toggle("shadow-sm", !isActive);
+            item.classList.toggle("ring-1", !isActive);
+            item.classList.toggle("ring-slate-200", !isActive);
+        });
+        renderDashboardMenus();
+    });
+});
+
+dashboardSortButton?.addEventListener("click", () => {
+    dashboardSort = dashboardSort === "price-low" ? "price-high" : "price-low";
+    dashboardSortButton.innerHTML = `${dashboardSort === "price-low" ? "Harga terendah" : "Harga tertinggi"} <i class="ph ph-caret-down text-gray-500"></i>`;
+    renderDashboardMenus();
+});
+
+document.querySelectorAll(".dashboard-toast-trigger").forEach((button) => {
+    button.addEventListener("click", () => showDashboardToast(`${button.textContent.trim()} dipilih`));
 });
 
 [menuContainer, latestMenuContainer].forEach((container) => container?.addEventListener("click", (event) => {
@@ -574,7 +617,19 @@ function menuCard(item, index = 0) {
 }
 
 function renderDashboardMenus() {
-    const latestMenus = menus.slice(0, 3);
+    const dashboardMenus = menus
+        .filter((item) => {
+            const matchesQuery = `${item.name} ${item.restaurantId} ${item.category}`.toLowerCase().includes(dashboardQuery);
+            const matchesCategory = dashboardCategory === "all" || item.category === dashboardCategory;
+            return matchesQuery && matchesCategory;
+        })
+        .sort((a, b) => {
+            if (dashboardSort === "price-low") return a.price - b.price;
+            if (dashboardSort === "price-high") return b.price - a.price;
+            return 0;
+        });
+
+    const latestMenus = dashboardMenus.slice(0, 4);
     const recommendedMenus = [...menus]
         .filter((item) => item.stock > 0)
         .sort((a, b) => a.price - b.price)
@@ -582,7 +637,7 @@ function renderDashboardMenus() {
 
     latestMenuContainer.innerHTML = latestMenus.length
         ? latestMenus.map((item, index) => compactMenuCard(item, index)).join("")
-        : emptyState("Belum ada makanan terbaru dari mitra.");
+        : emptyState("Menu tidak ditemukan. Coba kata kunci atau kategori lain.");
 
     recommendationContainer.innerHTML = recommendedMenus.length
         ? recommendedMenus.map((item, index) => recommendationCard(item, index)).join("")
@@ -592,17 +647,56 @@ function renderDashboardMenus() {
 }
 
 function compactMenuCard(item, index = 0) {
+    const isFav = favoriteIds.has(item.id);
+    const heartColor = isFav ? "text-red-500" : "text-slate-400";
+    const heartFill = isFav ? "fill-current" : "";
+    const isFeatured = index === 1;
+
     return `
-        <article class="menu-card rounded-xl border border-slate-200 bg-white p-4" style="animation-delay:${index * 60}ms">
-            <img src="${escapeHtml(item.imageUrl)}" alt="${escapeHtml(item.name)}" class="h-28 w-full rounded-xl bg-yellow-50 object-contain p-3" onerror="this.src='./assets/burger-signin.png'">
-            <p class="mt-4 text-xs font-bold uppercase tracking-[.16em] text-slate-400">${escapeHtml(item.restaurantId)}</p>
-            <h3 class="mt-1 line-clamp-2 text-sm font-black text-resqBlue">${escapeHtml(item.name)}</h3>
-            <div class="mt-4 flex items-center justify-between">
-                <span class="text-sm font-black text-resqBlue">${formatRupiah(item.price)}</span>
-                <button data-order data-id="${escapeHtml(item.id)}" class="motion-button rounded-lg bg-resqYellow px-3 py-2 text-xs font-black text-resqNavy">Pesan</button>
+        <article class="product-card group flex flex-col" style="animation-delay:${index * 60}ms">
+            <div class="relative mb-4 flex aspect-square items-center justify-center overflow-hidden rounded-[20px] bg-slate-50 p-6">
+                <button data-favorite="${escapeHtml(item.id)}" class="absolute right-3 top-3 z-10 flex h-8 w-8 items-center justify-center rounded-full bg-white ${heartColor} shadow-sm transition-transform hover:scale-110 hover:text-red-500" aria-label="Favorit">
+                    <i data-lucide="heart" class="h-4 w-4 ${heartFill} transition-colors duration-200"></i>
+                </button>
+                <img src="${escapeHtml(item.imageUrl)}" alt="${escapeHtml(item.name)}" class="h-full w-full object-contain transition duration-300 group-hover:scale-105" onerror="this.src='./assets/burger-signin.png'">
             </div>
+            <div class="mb-1 flex items-start justify-between gap-3">
+                <h3 class="product-title text-[15px] font-black leading-snug text-resqBlue">${escapeHtml(item.name)}</h3>
+                <span class="shrink-0 text-[15px] font-black text-resqBlue">${formatRupiah(item.price)}</span>
+            </div>
+            <p class="mb-2 text-xs font-semibold text-slate-500">${escapeHtml(item.restaurantId)} &middot; ${escapeHtml(item.category)}</p>
+            <div class="mb-3 flex items-center gap-1">
+                <div class="flex text-sm text-resqYellow">
+                    <i class="ph-fill ph-star"></i><i class="ph-fill ph-star"></i><i class="ph-fill ph-star"></i><i class="ph-fill ph-star"></i><i class="ph-fill ph-star"></i>
+                </div>
+                <span class="ml-1 text-xs font-semibold text-slate-500">(${Math.max(12, item.stock * 9)})</span>
+            </div>
+            <button data-order data-id="${escapeHtml(item.id)}" class="add-to-cart-btn mt-auto w-fit rounded-full ${isFeatured ? "border border-resqBlue bg-resqBlue text-white hover:bg-slate-800" : "border border-slate-300 text-resqBlue hover:border-resqBlue"} px-5 py-2 text-xs font-black transition" ${item.stock <= 0 ? "disabled" : ""}>
+                Pesan
+            </button>
         </article>
     `;
+}
+
+function showDashboardToast(message) {
+    const container = byId("dashboard-toast-container");
+    if (!container) return;
+
+    const toast = document.createElement("div");
+    toast.className = "flex translate-y-[-20px] transform items-center gap-2 rounded-lg bg-gray-800 px-5 py-3 text-sm text-white opacity-0 shadow-lg transition-all duration-300";
+    toast.innerHTML = `<i class="ph-fill ph-info text-resqYellow"></i> ${escapeHtml(message)}`;
+    container.appendChild(toast);
+
+    setTimeout(() => {
+        toast.classList.remove("translate-y-[-20px]", "opacity-0");
+        toast.classList.add("translate-y-0", "opacity-100");
+    }, 10);
+
+    setTimeout(() => {
+        toast.classList.remove("translate-y-0", "opacity-100");
+        toast.classList.add("translate-y-[-20px]", "opacity-0");
+        setTimeout(() => toast.remove(), 300);
+    }, 2500);
 }
 
 function recommendationCard(item, index = 0) {

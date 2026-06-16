@@ -8,7 +8,7 @@ import {
     isWaitingPickup,
     loadAdminData
 } from "./admin-data.js";
-import { formatRupiah } from "./utils.js";
+import { escapeHtml, formatRupiah } from "./utils.js";
 import { renderMobileNav, renderScreens, renderSidebar } from "./admin-ui.js";
 
 const foodImages = {
@@ -46,6 +46,7 @@ function renderLayout(data) {
 
     setupNavigation();
     setupMobileMenu();
+    setupOrderInteractions(data.orders);
     window.lucide?.createIcons();
 }
 
@@ -78,6 +79,308 @@ function setupMobileMenu() {
         document.getElementById("mobile-admin-sidebar")?.classList.toggle("hidden");
         window.lucide?.createIcons();
     });
+}
+
+function setupOrderInteractions(initialOrders = []) {
+    const page = document.querySelector("[data-orders-page]");
+    if (!page) return;
+
+    const orders = initialOrders.map((order, index) => normalizeOrderView(order, index));
+    const state = {
+        activeStatus: "Semua",
+        query: "",
+        sort: "Terbaru",
+        selected: new Set(),
+        modalOrderId: null
+    };
+
+    const elements = {
+        statsGrid: document.getElementById("order-stats-grid"),
+        tabs: [...document.querySelectorAll("[data-order-status]")],
+        tabCounts: [...document.querySelectorAll("[data-order-tab-count]")],
+        search: document.getElementById("order-search"),
+        filterButton: document.getElementById("order-filter-button"),
+        filterMenu: document.getElementById("order-filter-menu"),
+        sortButtons: [...document.querySelectorAll("[data-order-sort]")],
+        actionBar: document.getElementById("order-action-bar"),
+        selectedCount: document.getElementById("selected-order-count"),
+        tableBody: document.getElementById("orders-table-body"),
+        emptyState: document.getElementById("orders-empty-state"),
+        modal: document.getElementById("order-detail-modal"),
+        modalName: document.getElementById("modal-order-name"),
+        modalCode: document.getElementById("modal-order-code"),
+        modalPrice: document.getElementById("modal-order-price"),
+        modalStatus: document.getElementById("modal-order-status"),
+        modalPickup: document.getElementById("modal-order-pickup"),
+        modalComplete: document.getElementById("order-modal-complete"),
+        modalClose: document.getElementById("order-modal-close"),
+        modalCloseIcon: document.getElementById("order-modal-close-icon")
+    };
+
+    const render = () => {
+        renderOrderStats(elements.statsGrid, orders);
+        renderOrderTabs(elements.tabs, elements.tabCounts, orders, state.activeStatus);
+        renderActionBar(elements.actionBar, elements.selectedCount, state.selected.size);
+        renderOrderTable(elements.tableBody, elements.emptyState, getVisibleOrders(orders, state), state.selected);
+        window.lucide?.createIcons();
+    };
+
+    elements.tabs.forEach((button) => {
+        button.addEventListener("click", () => {
+            state.activeStatus = button.dataset.orderStatus || "Semua";
+            state.selected.clear();
+            render();
+        });
+    });
+
+    elements.search?.addEventListener("input", (event) => {
+        state.query = event.target.value.trim().toLowerCase();
+        render();
+    });
+
+    elements.filterButton?.addEventListener("click", () => {
+        elements.filterMenu?.classList.toggle("hidden");
+    });
+
+    elements.sortButtons.forEach((button) => {
+        button.addEventListener("click", () => {
+            state.sort = button.dataset.orderSort || "Terbaru";
+            elements.filterMenu?.classList.add("hidden");
+            render();
+        });
+    });
+
+    document.addEventListener("click", (event) => {
+        if (!elements.filterButton?.contains(event.target) && !elements.filterMenu?.contains(event.target)) {
+            elements.filterMenu?.classList.add("hidden");
+        }
+    });
+
+    elements.tableBody?.addEventListener("click", (event) => {
+        const checkbox = event.target.closest("[data-order-checkbox]");
+        const row = event.target.closest("[data-order-row]");
+
+        if (checkbox) {
+            const orderId = checkbox.dataset.orderCheckbox;
+            checkbox.checked ? state.selected.add(orderId) : state.selected.delete(orderId);
+            render();
+            return;
+        }
+
+        if (row) {
+            openOrderModal(row.dataset.orderRow, orders, elements, state);
+        }
+    });
+
+    document.querySelectorAll("[data-order-bulk]").forEach((button) => {
+        button.addEventListener("click", () => {
+            const action = button.dataset.orderBulk;
+
+            if (action === "clear") {
+                state.selected.clear();
+            } else {
+                const nextStatus = action === "complete" ? "Selesai" : "Dibatalkan";
+                orders.forEach((order) => {
+                    if (state.selected.has(order.id)) {
+                        order.status = nextStatus;
+                        order.color = statusColor(nextStatus);
+                    }
+                });
+                state.selected.clear();
+            }
+
+            render();
+        });
+    });
+
+    elements.modalClose?.addEventListener("click", () => closeOrderModal(elements.modal));
+    elements.modalCloseIcon?.addEventListener("click", () => closeOrderModal(elements.modal));
+    elements.modal?.addEventListener("click", (event) => {
+        if (event.target === elements.modal) closeOrderModal(elements.modal);
+    });
+    elements.modalComplete?.addEventListener("click", () => {
+        const order = orders.find((item) => item.id === state.modalOrderId);
+        if (!order) return;
+
+        order.status = "Selesai";
+        order.color = statusColor(order.status);
+        closeOrderModal(elements.modal);
+        render();
+    });
+
+    render();
+}
+
+function normalizeOrderView(order, index) {
+    const code = order.code || order.product?.sub || `#ORD-${String(index + 1).padStart(3, "0")}`;
+    const status = normalizeAdminOrderStatus(order.status);
+
+    return {
+        ...order,
+        id: order.id || code.replace(/^#/, "") || `order-${index}`,
+        code,
+        product: {
+            img: order.product?.img || pickImage(order.product?.name),
+            name: order.product?.name || "Produk Surplus",
+            sub: code
+        },
+        price: order.price || "Rp 0",
+        priceValue: parsePrice(order.price),
+        status,
+        color: statusColor(status),
+        pickup: order.pickup || "-",
+        createdAt: Number(order.createdAt || Date.now() - index * 60000)
+    };
+}
+
+function normalizeAdminOrderStatus(status) {
+    const normalized = String(status || "").toLowerCase();
+    if (normalized.includes("selesai") || normalized.includes("diambil") || normalized.includes("picked") || normalized.includes("complete")) return "Selesai";
+    if (normalized.includes("batal") || normalized.includes("cancel") || normalized.includes("gagal")) return "Dibatalkan";
+    return "Diproses";
+}
+
+function getVisibleOrders(orders, state) {
+    const filtered = orders.filter((order) => {
+        const matchesStatus = state.activeStatus === "Semua" || order.status === state.activeStatus;
+        const text = `${order.product.name} ${order.code}`.toLowerCase();
+        return matchesStatus && text.includes(state.query);
+    });
+
+    return [...filtered].sort((a, b) => {
+        if (state.sort === "Terlama") return a.createdAt - b.createdAt;
+        if (state.sort === "Harga terendah") return a.priceValue - b.priceValue;
+        if (state.sort === "Harga tertinggi") return b.priceValue - a.priceValue;
+        return b.createdAt - a.createdAt;
+    });
+}
+
+function renderOrderStats(container, orders) {
+    if (!container) return;
+
+    const stats = [
+        { icon: "box", label: "Total pesanan", value: orders.length },
+        { icon: "clock", label: "Menunggu pickup", value: orders.filter((order) => order.status === "Diproses").length },
+        { icon: "x-octagon", label: "Dibatalkan", value: orders.filter((order) => order.status === "Dibatalkan").length },
+        { icon: "shopping-bag", label: "Pesanan selesai", value: orders.filter((order) => order.status === "Selesai").length }
+    ];
+
+    container.innerHTML = `<div class="mb-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">${stats.map((item) => `
+        <article class="flex min-h-32 flex-col justify-between rounded-xl border border-gray-200 bg-resq-white p-5 shadow-sm transition-colors duration-200 hover:border-resq-navy">
+            <div class="mb-3 flex items-center space-x-3">
+                <div class="flex h-10 w-10 items-center justify-center rounded-lg border border-gray-200 text-gray-600"><i data-lucide="${item.icon}" class="h-5 w-5"></i></div>
+                <span class="text-sm font-medium text-gray-600">${item.label}</span>
+            </div>
+            <h3 class="text-2xl font-bold text-resq-navy">${item.value.toLocaleString("id-ID")}</h3>
+        </article>
+    `).join("")}</div>`;
+}
+
+function renderOrderTabs(tabs, counts, orders, activeStatus) {
+    const totals = {
+        Semua: orders.length,
+        Selesai: orders.filter((order) => order.status === "Selesai").length,
+        Diproses: orders.filter((order) => order.status === "Diproses").length,
+        Dibatalkan: orders.filter((order) => order.status === "Dibatalkan").length
+    };
+
+    tabs.forEach((button) => {
+        const isActive = button.dataset.orderStatus === activeStatus;
+        button.classList.toggle("border-resq-navy", isActive);
+        button.classList.toggle("font-bold", isActive);
+        button.classList.toggle("text-resq-navy", isActive);
+        button.classList.toggle("border-transparent", !isActive);
+        button.classList.toggle("font-medium", !isActive);
+        button.classList.toggle("text-gray-500", !isActive);
+    });
+
+    counts.forEach((item) => {
+        item.textContent = totals[item.dataset.orderTabCount]?.toLocaleString("id-ID") || "0";
+    });
+}
+
+function renderActionBar(actionBar, countLabel, count) {
+    if (!actionBar || !countLabel) return;
+    countLabel.textContent = count.toLocaleString("id-ID");
+    actionBar.classList.toggle("hidden", count === 0);
+    actionBar.classList.toggle("flex", count > 0);
+}
+
+function renderOrderTable(tableBody, emptyState, orders, selected) {
+    if (!tableBody || !emptyState) return;
+
+    tableBody.innerHTML = orders.map((order) => `
+        <tr data-order-row="${escapeHtml(order.id)}" class="group cursor-pointer border-b border-gray-50 transition-colors duration-200 hover:bg-gray-50">
+            <td class="py-4 pl-4 font-medium text-gray-600">
+                <input data-order-checkbox="${escapeHtml(order.id)}" type="checkbox" aria-label="Pilih ${escapeHtml(order.product.name)}" ${selected.has(order.id) ? "checked" : ""} class="h-4 w-4 cursor-pointer rounded border-gray-300 text-resq-navy focus:ring-resq-navy">
+            </td>
+            <td class="py-4 pl-4 font-medium text-gray-600">${renderOrderProductCell(order.product)}</td>
+            <td class="py-4 pl-4 font-medium text-gray-600">${escapeHtml(order.price)}</td>
+            <td class="py-4 pl-4 font-medium text-gray-600">${renderStatusBadge(order.status)}</td>
+            <td class="py-4 pl-4 font-medium text-gray-600">${escapeHtml(order.pickup)}</td>
+        </tr>
+    `).join("");
+
+    emptyState.classList.toggle("hidden", orders.length > 0);
+}
+
+function renderOrderProductCell(product) {
+    return `
+        <div class="flex items-center space-x-4">
+            <div class="flex h-12 w-12 items-center justify-center overflow-hidden rounded-lg bg-gray-100">
+                <img src="${escapeHtml(product.img)}" alt="${escapeHtml(product.name)}" class="h-full w-full object-cover">
+            </div>
+            <div>
+                <p class="font-bold text-resq-navy">${escapeHtml(product.name)}</p>
+                <p class="text-xs text-gray-500">${escapeHtml(product.sub || "Surplus food")}</p>
+            </div>
+        </div>
+    `;
+}
+
+function renderStatusBadge(status) {
+    const styles = {
+        Selesai: "bg-green-100 text-green-700",
+        Diproses: "bg-resq-yellow/20 text-resq-navy",
+        Dibatalkan: "bg-red-100 text-red-700"
+    };
+
+    return `<span class="inline-flex rounded-md px-3 py-1.5 text-[11px] font-bold ${styles[status] || "bg-gray-100 text-gray-600"}">${escapeHtml(status)}</span>`;
+}
+
+function openOrderModal(orderId, orders, elements, state) {
+    const order = orders.find((item) => item.id === orderId);
+    if (!order || !elements.modal) return;
+
+    state.modalOrderId = order.id;
+    elements.modalName.textContent = order.product.name;
+    elements.modalCode.textContent = order.code;
+    elements.modalPrice.textContent = order.price;
+    elements.modalStatus.innerHTML = renderStatusBadge(order.status);
+    elements.modalPickup.textContent = order.pickup;
+    elements.modalComplete.classList.toggle("hidden", order.status === "Selesai");
+
+    elements.modal.classList.remove("hidden");
+    elements.modal.classList.add("flex");
+    requestAnimationFrame(() => {
+        elements.modal.classList.remove("opacity-0");
+        elements.modal.querySelector("div")?.classList.remove("scale-95");
+    });
+}
+
+function closeOrderModal(modal) {
+    if (!modal) return;
+
+    modal.classList.add("opacity-0");
+    modal.querySelector("div")?.classList.add("scale-95");
+    window.setTimeout(() => {
+        modal.classList.add("hidden");
+        modal.classList.remove("flex");
+    }, 180);
+}
+
+function parsePrice(price = "") {
+    return Number(String(price).replace(/[^\d]/g, "")) || 0;
 }
 
 function mergeFirebaseData(baseData, menus, orders) {
@@ -316,8 +619,9 @@ function staticAdminData() {
             orderSeed("Croissant Butter", "#ORD-456BB", "Rp 15.000", "Diproses", "yellow", "19:00 WIB", foodImages.croissant),
             orderSeed("Chicken Katsu Bento", "#ORD-748BB", "Rp 25.000", "Diproses", "yellow", "20:00 WIB", foodImages.bento),
             orderSeed("Box of 6 Donuts", "#ORD-832BB", "Rp 24.000", "Diproses", "yellow", "21:30 WIB", foodImages.donuts),
-            orderSeed("Healthy Mix Salad", "#ORD-919BB", "Rp 22.500", "Diambil", "blue", "18:00 WIB", foodImages.salad),
-            orderSeed("Double Cheese Burger", "#ORD-126BB", "Rp 20.000", "Selesai", "green", "20:30 WIB", foodImages.burger)
+            orderSeed("Healthy Mix Salad", "#ORD-919BB", "Rp 22.500", "Selesai", "green", "18:00 WIB", foodImages.salad),
+            orderSeed("Double Cheese Burger", "#ORD-126BB", "Rp 20.000", "Selesai", "green", "20:30 WIB", foodImages.burger),
+            orderSeed("Vegan Salad Bowl", "#ORD-337BB", "Rp 25.000", "Dibatalkan", "red", "19:30 WIB", foodImages.vegetables)
         ],
         inventory: [
             inventorySeed("Croissant Butter", "Bakery", "Bumi Bakery", "18 pcs", "Hari ini, 22:00", "Tersedia", "green", foodImages.croissant),
