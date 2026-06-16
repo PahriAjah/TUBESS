@@ -80,9 +80,13 @@ let dashboardCategory = "all";
 let dashboardSort = "latest";
 
 requireAuth(async (user) => {
-    if (await isPartnerAccount(user)) {
-        window.location.href = "admin.html";
-        return;
+    const isPartner = await isPartnerAccount(user);
+    if (isPartner) {
+        const btnMitra = byId("btn-switch-to-mitra");
+        if (btnMitra) {
+            btnMitra.classList.remove("hidden");
+            btnMitra.classList.add("flex");
+        }
     }
 
     userEmail = user.email;
