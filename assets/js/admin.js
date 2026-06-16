@@ -463,7 +463,7 @@ function setupOrderInteractions(initialOrders = []) {
         if (event.target === elements.modal) closeOrderModal(elements.modal);
     });
     elements.modalComplete?.addEventListener("click", async () => {
-        const order = orders.find((item) => item.id === state.modalOrderId);
+        const order = orders.find((item) => String(item.id) === String(state.modalOrderId));
         if (!order) return;
 
         const inputCode = elements.modalInputCode.value.trim();
@@ -781,9 +781,9 @@ function mergeFirebaseData(baseData, menus, orders) {
             { icon: "shopping-bag", label: "Pesanan aktif", value: activeOrders.length.toLocaleString("id-ID") }
         ],
         customerStats: buildCustomerStats(orders),
-        orders: orders.length ? orders.slice(0, 8).map(orderToView) : baseData.orders,
-        inventory: menus.length ? menus.slice(0, 8).map(menuToInventoryView) : baseData.inventory,
-        products: menus.length ? menus.slice(0, 8).map(menuToProductView) : baseData.products,
+        orders: orders.length ? orders : baseData.orders,
+        inventory: menus.length ? menus : baseData.inventory,
+        products: menus.length ? menus : baseData.products,
         customers: buildCustomers(orders),
         activities: orders.length ? orders.slice(0, 4).map((order) => ({
             icon: "shopping-bag",
