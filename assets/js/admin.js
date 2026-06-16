@@ -597,7 +597,7 @@ function renderOrderTable(tableBody, emptyState, orders, selected) {
             <td class="py-4 pl-4 font-medium text-gray-600">
                 <input data-order-checkbox="${escapeHtml(order.id)}" type="checkbox" aria-label="Pilih ${escapeHtml(order.product.name)}" ${selected.has(order.id) ? "checked" : ""} class="h-4 w-4 cursor-pointer rounded border-gray-300 text-resq-navy focus:ring-resq-navy">
             </td>
-            <td class="py-4 pl-4 font-medium text-gray-600">${renderOrderProductCell(order.product)}</td>
+            <td class="py-4 pl-4 font-medium text-gray-600">${renderOrderProductCell(order.product, order.recipient)}</td>
             <td class="py-4 pl-4 font-medium text-gray-600">${escapeHtml(order.price)}</td>
             <td class="py-4 pl-4 font-medium text-gray-600">${renderStatusBadge(order.status)}</td>
             <td class="py-4 pl-4 font-medium text-gray-600">${escapeHtml(order.pickup)}</td>
@@ -607,7 +607,7 @@ function renderOrderTable(tableBody, emptyState, orders, selected) {
     emptyState.classList.toggle("hidden", orders.length > 0);
 }
 
-function renderOrderProductCell(product) {
+function renderOrderProductCell(product, recipient) {
     return `
         <div class="flex items-center space-x-4">
             <div class="flex h-12 w-12 items-center justify-center overflow-hidden rounded-lg bg-gray-100">
@@ -615,7 +615,10 @@ function renderOrderProductCell(product) {
             </div>
             <div>
                 <p class="font-bold text-resq-navy">${escapeHtml(product.name)}</p>
-                <p class="text-xs text-gray-500">${escapeHtml(product.sub || "Surplus food")}</p>
+                <div class="flex flex-col">
+                    <p class="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Penerima: ${escapeHtml(recipient || "Pelanggan")}</p>
+                    <p class="text-xs text-gray-500">${escapeHtml(product.sub || "Surplus food")}</p>
+                </div>
             </div>
         </div>
     `;
