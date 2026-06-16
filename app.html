@@ -102,108 +102,127 @@
                 </nav>
             </header>
 
-            <div class="notification-hub fixed right-4 top-4 z-50 lg:right-8 lg:top-6">
-                <button id="btn-notification" type="button" class="notification-button" aria-label="Buka notifikasi" aria-expanded="false">
-                    <i data-lucide="bell" class="h-5 w-5"></i>
-                    <span class="notification-dot" aria-hidden="true">2</span>
-                </button>
-                <div id="notification-popover" class="notification-popover hidden" role="dialog" aria-label="Notifikasi terbaru">
-                    <div class="flex items-start justify-between gap-4 border-b border-slate-100 px-4 py-4">
-                        <div>
-                            <p class="text-xs font-black uppercase tracking-[.18em] text-slate-400">Inbox</p>
-                            <h2 class="mt-1 text-lg font-black text-resqBlue">Notifikasi</h2>
+            <main class="mx-auto w-full px-0 py-0">
+                <div id="dashboard-toast-container" class="fixed right-4 top-4 z-50 flex flex-col gap-2"></div>
+
+                <div class="bg-resqBlue py-1.5 text-[11px] font-bold text-white">
+                    <div class="mx-auto flex max-w-[1200px] items-center justify-between px-4">
+                        <div class="flex cursor-pointer items-center gap-1.5 opacity-90 hover:opacity-100">
+                            <i class="ph ph-phone text-sm"></i>
+                            <span>+62 812 0000 0000</span>
                         </div>
-                        <span id="notification-status" class="rounded-full bg-yellow-100 px-3 py-1 text-[11px] font-black text-resqBlue">2 baru</span>
-                    </div>
-                    <div class="space-y-3 p-3">
-                        <article class="notification-item">
-                            <span class="notification-icon bg-blue-100 text-blue-600"><i data-lucide="info" class="h-5 w-5"></i></span>
-                            <div>
-                                <p class="text-sm font-black text-resqBlue">Selamat Datang di RESQ!</p>
-                                <p class="mt-1 text-xs font-semibold leading-5 text-slate-500">Mulai selamatkan makanan pertamamu hari ini dan nikmati harga spesial.</p>
-                                <p class="mt-2 text-[10px] font-bold text-slate-400">Baru saja</p>
+                        <div class="hidden flex-1 text-center opacity-90 sm:block">
+                            Hemat hingga 50% untuk makanan surplus pilihan &nbsp;|&nbsp;
+                            <button data-target="makanan" class="app-nav underline hover:text-resqYellow">Pesan sekarang</button>
+                        </div>
+                        <div class="flex items-center gap-4 opacity-90">
+                            <div class="flex cursor-pointer items-center gap-1 hover:opacity-100">
+                                <span>ID</span>
+                                <i class="ph ph-caret-down"></i>
                             </div>
-                        </article>
-                        <article class="notification-item">
-                            <span class="notification-icon bg-yellow-100 text-yellow-600"><i data-lucide="tag" class="h-5 w-5"></i></span>
-                            <div>
-                                <p class="text-sm font-black text-resqBlue">Banyak Roti Sisa di Bakery A!</p>
-                                <p class="mt-1 text-xs font-semibold leading-5 text-slate-500">Toko favoritmu baru saja mengunggah 5 roti sisa. Buruan pesan sebelum kehabisan!</p>
-                                <p class="mt-2 text-[10px] font-bold text-slate-400">2 jam yang lalu</p>
-                            </div>
-                        </article>
+                            <button data-target="peta" class="app-nav flex cursor-pointer items-center gap-1 hover:opacity-100">
+                                <span>Location</span>
+                                <i class="ph ph-caret-down"></i>
+                            </button>
+                        </div>
                     </div>
                 </div>
-            </div>
 
-            <main class="mx-auto w-full px-0 py-0">
-                <section id="dashboard" class="app-screen active bg-[#fffdf5] text-resqNavy">
-                    <div id="dashboard-toast-container" class="fixed right-4 top-4 z-50 flex flex-col gap-2"></div>
+                <nav class="sticky top-0 z-30 border-b border-slate-100 bg-white">
+                    <div class="mx-auto flex max-w-[1200px] items-center justify-between gap-4 px-4 py-4 lg:gap-8">
+                        <button data-target="dashboard" class="app-nav flex flex-shrink-0 items-center gap-2">
+                            <img src="./assets/img/logo.png" alt="RESQ" class="h-11 w-auto object-contain">
+                        </button>
 
-                    <div class="bg-resqBlue py-1.5 text-[11px] font-bold text-white">
-                        <div class="mx-auto flex max-w-[1200px] items-center justify-between px-4">
-                            <div class="flex cursor-pointer items-center gap-1.5 opacity-90 hover:opacity-100">
-                                <i class="ph ph-phone text-sm"></i>
-                                <span>+62 812 0000 0000</span>
-                            </div>
-                            <div class="hidden flex-1 text-center opacity-90 sm:block">
-                                Hemat hingga 50% untuk makanan surplus pilihan &nbsp;|&nbsp;
-                                <button data-target="makanan" class="app-nav underline hover:text-resqYellow">Pesan sekarang</button>
-                            </div>
-                            <div class="flex items-center gap-4 opacity-90">
-                                <div class="flex cursor-pointer items-center gap-1 hover:opacity-100">
-                                    <span>ID</span>
-                                    <i class="ph ph-caret-down"></i>
-                                </div>
-                                <button data-target="peta" class="app-nav flex cursor-pointer items-center gap-1 hover:opacity-100">
-                                    <span>Location</span>
-                                    <i class="ph ph-caret-down"></i>
+                        <ul class="hidden items-center gap-8 text-sm font-bold text-slate-600 lg:flex">
+                            <li><button data-target="dashboard" class="app-nav hover:text-resqBlue">Dashboard</button></li>
+                            <li>
+                                <button data-target="makanan" class="app-nav flex items-center gap-1 hover:text-resqBlue">
+                                    Kategori <i class="ph ph-caret-down"></i>
                                 </button>
+                            </li>
+                            <li><button data-target="makanan" class="app-nav hover:text-resqBlue">Special Deals</button></li>
+                        </ul>
+
+                        <div class="relative hidden max-w-md flex-1 items-center rounded-full bg-slate-100 px-4 py-2 md:flex">
+                            <input id="dashboard-search" type="search" placeholder="Cari makanan surplus" class="w-full border-none bg-transparent text-sm font-semibold text-slate-700 outline-none placeholder-slate-400">
+                            <i class="ph ph-magnifying-glass absolute right-4 cursor-pointer text-lg text-slate-500"></i>
+                        </div>
+
+                        <div class="flex flex-shrink-0 items-center gap-4 text-sm font-bold text-slate-600 lg:gap-6">
+                            <i class="ph ph-magnifying-glass cursor-pointer text-2xl hover:text-resqBlue md:hidden"></i>
+                            
+                            <div class="relative">
+                                <button id="btn-notification" type="button" class="flex items-center gap-1.5 hover:text-resqBlue" aria-label="Buka notifikasi" aria-expanded="false">
+                                    <div class="relative">
+                                        <i class="ph ph-bell text-xl"></i>
+                                        <span id="notification-dot" class="absolute -right-1 -top-1 h-3.5 w-3.5 rounded-full border-2 border-white bg-red-500 text-[8px] font-black leading-3 text-white ring-red-500/20 ring-offset-1">2</span>
+                                    </div>
+                                    <span class="hidden xl:block">Notifikasi</span>
+                                </button>
+                                
+                                <div id="notification-popover" class="absolute right-0 top-12 z-50 hidden w-[320px] origin-top-right overflow-hidden rounded-[24px] border border-slate-100 bg-white shadow-2xl ring-1 ring-slate-900/5 transition-all md:w-[380px]" role="dialog" aria-label="Notifikasi terbaru">
+                                    <div class="flex items-start justify-between gap-4 border-b border-slate-100 px-6 py-5">
+                                        <div>
+                                            <p class="text-[10px] font-black uppercase tracking-[.2em] text-slate-400">Inbox</p>
+                                            <h2 class="mt-1 text-lg font-black text-resqBlue">Notifikasi</h2>
+                                        </div>
+                                        <span id="notification-status" class="rounded-full bg-blue-50 px-3 py-1 text-[11px] font-black text-resqBlue">2 baru</span>
+                                    </div>
+                                    <div class="max-h-[400px] overflow-y-auto p-2 no-scrollbar">
+                                        <div class="space-y-1">
+                                            <article class="flex cursor-pointer gap-4 rounded-2xl p-4 transition hover:bg-slate-50">
+                                                <div class="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-blue-50 text-blue-600">
+                                                    <i class="ph-fill ph-info text-xl"></i>
+                                                </div>
+                                                <div>
+                                                    <p class="text-sm font-black text-resqBlue">Selamat Datang di RESQ!</p>
+                                                    <p class="mt-1 text-xs font-medium leading-relaxed text-slate-500">Mulai selamatkan makanan pertamamu hari ini dan nikmati harga spesial.</p>
+                                                    <p class="mt-2 text-[10px] font-bold text-slate-400">Baru saja</p>
+                                                </div>
+                                            </article>
+                                            <article class="flex cursor-pointer gap-4 rounded-2xl p-4 transition hover:bg-slate-50">
+                                                <div class="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-yellow-50 text-yellow-600">
+                                                    <i class="ph-fill ph-tag text-xl"></i>
+                                                </div>
+                                                <div>
+                                                    <p class="text-sm font-black text-resqBlue">Banyak Roti Sisa!</p>
+                                                    <p class="mt-1 text-xs font-medium leading-relaxed text-slate-500">Toko favoritmu baru saja mengunggah 5 roti sisa. Buruan pesan!</p>
+                                                    <p class="mt-2 text-[10px] font-bold text-slate-400">2 jam yang lalu</p>
+                                                </div>
+                                            </article>
+                                        </div>
+                                    </div>
+                                    <div class="border-t border-slate-50 p-4">
+                                        <button class="w-full rounded-xl bg-slate-50 py-2.5 text-center text-[11px] font-black text-resqBlue transition hover:bg-slate-100">
+                                            Lihat Semua Notifikasi
+                                        </button>
+                                    </div>
+                                </div>
                             </div>
+
+                            <button data-target="favorit" class="app-nav flex items-center gap-1.5 hover:text-resqBlue">
+                                <i class="ph ph-heart text-xl"></i>
+                                <span class="hidden xl:block">Favorit</span>
+                            </button>
+                            <button data-target="pesanan" class="app-nav flex items-center gap-1.5 hover:text-resqBlue">
+                                <i class="ph ph-shopping-cart text-xl"></i>
+                                <span class="hidden xl:block">Pesanan</span>
+                            </button>
+                            <button data-target="profil" class="app-nav flex items-center gap-1.5 hover:text-resqBlue">
+                                <i class="ph ph-user text-xl"></i>
+                                <span class="hidden xl:block">Akun</span>
+                            </button>
+                            <button id="btn-logout-top" class="flex items-center gap-1.5 hover:text-red-600">
+                                <i class="ph ph-sign-out text-xl"></i>
+                                <span class="hidden xl:block">Keluar</span>
+                            </button>
                         </div>
                     </div>
+                </nav>
 
-                    <nav class="sticky top-0 z-30 border-b border-slate-100 bg-white">
-                        <div class="mx-auto flex max-w-[1200px] items-center justify-between gap-4 px-4 py-4 lg:gap-8">
-                            <a href="#" class="flex flex-shrink-0 items-center gap-2">
-                                <img src="./assets/img/logo.png" alt="RESQ" class="h-11 w-auto object-contain">
-                            </a>
-
-                            <ul class="hidden items-center gap-8 text-sm font-bold text-slate-600 lg:flex">
-                                <li>
-                                    <button data-target="makanan" class="app-nav flex items-center gap-1 hover:text-resqBlue">
-                                        Kategori <i class="ph ph-caret-down"></i>
-                                    </button>
-                                </li>
-                                <li><button data-target="makanan" class="app-nav hover:text-resqBlue">Deals</button></li>
-                                <li><button data-target="favorit" class="app-nav hover:text-resqBlue">Favorit</button></li>
-                                <li><button data-target="pesanan" class="app-nav hover:text-resqBlue">Pesanan</button></li>
-                            </ul>
-
-                            <div class="relative hidden max-w-md flex-1 items-center rounded-full bg-slate-100 px-4 py-2 md:flex">
-                                <input id="dashboard-search" type="search" placeholder="Cari makanan surplus" class="w-full border-none bg-transparent text-sm font-semibold text-slate-700 outline-none placeholder-slate-400">
-                                <i class="ph ph-magnifying-glass absolute right-4 cursor-pointer text-lg text-slate-500"></i>
-                            </div>
-
-                            <div class="flex flex-shrink-0 items-center gap-4 text-sm font-bold text-slate-600 lg:gap-6">
-                                <i class="ph ph-magnifying-glass cursor-pointer text-2xl hover:text-resqBlue md:hidden"></i>
-                                <button data-target="profil" class="app-nav flex items-center gap-1.5 hover:text-resqBlue">
-                                    <i class="ph ph-user text-xl"></i>
-                                    <span class="hidden sm:block">Akun</span>
-                                </button>
-                                <button data-target="pesanan" class="app-nav flex items-center gap-1.5 hover:text-resqBlue">
-                                    <i class="ph ph-shopping-cart text-xl"></i>
-                                    <span class="hidden sm:block">Pesanan</span>
-                                </button>
-                                <button id="btn-logout-top" class="flex items-center gap-1.5 hover:text-red-600">
-                                    <i class="ph ph-sign-out text-xl"></i>
-                                    <span class="hidden sm:block">Keluar</span>
-                                </button>
-                            </div>
-                        </div>
-                    </nav>
-
-                    <div class="mx-auto max-w-[1200px] px-4 py-8">
+                <div class="mx-auto max-w-[1200px] px-4 py-8">
+                    <section id="dashboard" class="app-screen active text-resqNavy">
                         <section class="relative flex h-auto flex-col items-center justify-between overflow-hidden rounded-[24px] bg-[#fff4cf] px-8 py-8 md:h-[280px] md:flex-row md:px-16 md:py-0">
                             <div class="z-10 mb-8 max-w-md md:mb-0">
                                 <h1 class="mb-6 text-4xl font-black leading-tight text-resqBlue md:text-[42px]">
@@ -258,215 +277,227 @@
                                 <div class="skeleton-card sm:col-span-2 lg:col-span-4"></div>
                             </div>
                         </section>
-                    </div>
 
-                    <section class="mt-8 grid gap-5 md:grid-cols-2 xl:grid-cols-4">
-                        <article class="metric-card rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
-                            <p class="text-sm font-bold text-slate-500">Makanan Tersedia</p>
-                            <p id="stat-stock" class="mt-2 text-3xl font-black text-resqBlue">0</p>
-                        </article>
-                        <article class="metric-card rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
-                            <p class="text-sm font-bold text-slate-500">Total Pesanan</p>
-                            <p id="stat-orders" class="mt-2 text-3xl font-black text-resqBlue">0</p>
-                        </article>
-                        <article class="metric-card rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
-                            <p class="text-sm font-bold text-slate-500">Berhasil Diselamatkan</p>
-                            <p id="stat-saved" class="mt-2 text-3xl font-black text-emerald-600">0</p>
-                        </article>
-                        <article class="metric-card rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
-                            <p class="text-sm font-bold text-slate-500">Siap Diambil</p>
-                            <p id="stat-ready" class="mt-2 text-3xl font-black text-resqBlue">0</p>
-                        </article>
-                    </section>
+                        <section class="mt-12 grid gap-5 md:grid-cols-2 xl:grid-cols-4">
+                            <article class="metric-card rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
+                                <p class="text-sm font-bold text-slate-500">Makanan Tersedia</p>
+                                <p id="stat-stock" class="mt-2 text-3xl font-black text-resqBlue">0</p>
+                            </article>
+                            <article class="metric-card rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
+                                <p class="text-sm font-bold text-slate-500">Total Pesanan</p>
+                                <p id="stat-orders" class="mt-2 text-3xl font-black text-resqBlue">0</p>
+                            </article>
+                            <article class="metric-card rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
+                                <p class="text-sm font-bold text-slate-500">Berhasil Diselamatkan</p>
+                                <p id="stat-saved" class="mt-2 text-3xl font-black text-emerald-600">0</p>
+                            </article>
+                            <article class="metric-card rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
+                                <p class="text-sm font-bold text-slate-500">Siap Diambil</p>
+                                <p id="stat-ready" class="mt-2 text-3xl font-black text-resqBlue">0</p>
+                            </article>
+                        </section>
 
-                    <section class="mt-8 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-                        <h2 class="text-xl font-black text-resqBlue">Promo & Rekomendasi</h2>
-                        <p class="mt-1 text-sm font-medium text-slate-500">Menu bernilai terbaik untuk pickup hari ini.</p>
-                        <div id="rekomendasi-menu" class="mt-5 grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-                            <div class="skeleton-card"></div>
-                        </div>
-                    </section>
-
-                    <div class="hidden">
-                        <span id="impact-co2">0</span>
-                        <span id="impact-water">0</span>
-                        <span id="impact-points">0</span>
-                    </div>
-                </section>
-
-                <section id="makanan" class="app-screen">
-                    <div class="mb-8">
-                        <h1 class="text-4xl font-black tracking-tight text-resqBlue">Makanan Tersedia</h1>
-                        <p class="mt-3 text-sm font-medium text-slate-500">Cari makanan dari mitra, filter kategori, lalu pesan untuk pickup.</p>
-                    </div>
-
-                    <section class="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
-                        <div class="grid gap-3 md:grid-cols-[1fr_220px_180px_auto] md:items-center">
-                            <label class="relative block">
-                                <i data-lucide="search" class="pointer-events-none absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-slate-400"></i>
-                                <input id="input-cari" type="search" placeholder="Cari menu atau mitra..." class="h-12 w-full rounded-xl border border-slate-200 bg-slate-50 pl-12 pr-4 text-sm font-semibold outline-none transition focus:border-resqBlue focus:bg-white">
-                            </label>
-                            <div class="filter-dropdown" data-filter-dropdown>
-                                <select id="filter-kategori" class="native-filter-select" aria-label="Filter kategori">
-                                    <option value="all">Semua kategori</option>
-                                    <option value="Ready Meal">Ready Meal</option>
-                                    <option value="Bakery">Bakery</option>
-                                    <option value="Sayur & Buah">Sayur & Buah</option>
-                                    <option value="Dairy">Dairy</option>
-                                </select>
-                                <button type="button" class="filter-trigger" aria-haspopup="listbox" aria-expanded="false">
-                                    <span class="filter-trigger-text">Semua kategori</span>
-                                    <i data-lucide="chevron-down" class="filter-chevron h-5 w-5"></i>
-                                </button>
-                                <div class="filter-menu" role="listbox">
-                                    <button type="button" class="filter-option is-selected" data-value="all" role="option" aria-selected="true">Semua kategori</button>
-                                    <button type="button" class="filter-option" data-value="Ready Meal" role="option">Ready Meal</button>
-                                    <button type="button" class="filter-option" data-value="Bakery" role="option">Bakery</button>
-                                    <button type="button" class="filter-option" data-value="Sayur & Buah" role="option">Sayur & Buah</button>
-                                    <button type="button" class="filter-option" data-value="Dairy" role="option">Dairy</button>
-                                </div>
-                            </div>
-                            <div class="filter-dropdown" data-filter-dropdown>
-                                <select id="filter-stok" class="native-filter-select" aria-label="Filter stok">
-                                    <option value="all">Semua stok</option>
-                                    <option value="available">Tersedia</option>
-                                    <option value="low">Hampir habis</option>
-                                </select>
-                                <button type="button" class="filter-trigger" aria-haspopup="listbox" aria-expanded="false">
-                                    <span class="filter-trigger-text">Semua stok</span>
-                                    <i data-lucide="chevron-down" class="filter-chevron h-5 w-5"></i>
-                                </button>
-                                <div class="filter-menu" role="listbox">
-                                    <button type="button" class="filter-option is-selected" data-value="all" role="option" aria-selected="true">Semua stok</button>
-                                    <button type="button" class="filter-option" data-value="available" role="option">Tersedia</button>
-                                    <button type="button" class="filter-option" data-value="low" role="option">Hampir habis</button>
-                                </div>
-                            </div>
-                            <button id="btn-reset-filter" class="motion-button h-12 rounded-xl bg-slate-100 px-5 text-sm font-black text-resqBlue transition hover:bg-slate-200">Reset</button>
-                        </div>
-                    </section>
-
-                    <section id="menu" class="mt-8 space-y-4">
-                        <div class="flex items-end justify-between gap-4">
-                            <div>
-                                <p class="text-xs font-bold uppercase tracking-[.22em] text-slate-400">Daftar Mitra</p>
-                                <h2 class="mt-1 text-2xl font-black text-resqBlue">Menu dari Mitra</h2>
-                            </div>
-                            <p id="jumlah-hasil" class="text-sm font-bold text-slate-500">Memuat...</p>
-                        </div>
-                        <div id="daftar-menu" class="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
-                            <div class="skeleton-card md:col-span-2 xl:col-span-3"></div>
-                        </div>
-                    </section>
-                </section>
-
-                <section id="peta" class="app-screen">
-                    <div class="mb-8">
-                        <h1 class="text-4xl font-black tracking-tight text-resqBlue">Peta Lokasi</h1>
-                        <p class="mt-3 text-sm font-medium text-slate-500">Temukan makanan surplus dari mitra di sekitarmu dengan mudah.</p>
-                    </div>
-                    <div class="relative rounded-xl border border-slate-200 bg-white p-2 shadow-sm">
-                        <div id="resq-map" class="h-[550px] w-full rounded-lg z-0"></div>
-                        <button id="btn-my-location" class="absolute bottom-6 right-6 z-[10] flex h-12 w-12 items-center justify-center rounded-full bg-white text-resqBlue shadow-md ring-1 ring-slate-200 transition hover:bg-slate-50" aria-label="Lokasi Saya">
-                            <i data-lucide="navigation" class="h-5 w-5"></i>
-                        </button>
-                    </div>
-                </section>
-
-                <section id="pesanan" class="app-screen">
-                    <div class="mb-8">
-                        <h1 class="text-4xl font-black tracking-tight text-resqBlue">Pesanan Saya</h1>
-                        <p class="mt-3 text-sm font-medium text-slate-500">Riwayat pesanan dan status Diproses, Siap Diambil, atau Selesai.</p>
-                    </div>
-                    <div class="grid gap-6 xl:grid-cols-[minmax(0,1fr)_390px]">
-                        <section class="rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
-                            <div class="mb-5 flex items-center justify-between">
-                                <h2 class="text-xl font-black text-resqBlue">Riwayat Pesanan</h2>
-                                <span class="rounded-full bg-slate-100 px-3 py-1 text-xs font-black text-slate-500">Status aktif</span>
-                            </div>
-                            <div id="daftar-pesanan" class="space-y-3">
-                                <p class="rounded-xl bg-slate-50 p-4 text-sm font-semibold text-slate-500">Riwayat pesanan akan tampil di sini.</p>
+                        <section class="mt-8 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+                            <h2 class="text-xl font-black text-resqBlue">Promo & Rekomendasi</h2>
+                            <p class="mt-1 text-sm font-medium text-slate-500">Menu bernilai terbaik untuk pickup hari ini.</p>
+                            <div id="rekomendasi-menu" class="mt-5 grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+                                <div class="skeleton-card"></div>
                             </div>
                         </section>
 
-                        <section class="rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
-                            <div class="flex items-center justify-between">
-                                <h2 class="text-xl font-black text-resqBlue">Pesanan Dipilih</h2>
-                                <span id="selected-badge" class="rounded-full bg-slate-100 px-3 py-1 text-xs font-black text-slate-500">Kosong</span>
-                            </div>
-                            <div id="ringkasan-kosong" class="mt-5 rounded-xl bg-slate-50 p-5 text-sm leading-6 text-slate-500">
-                                Pilih salah satu menu dari Makanan Tersedia untuk melihat detail dan checkout.
-                            </div>
-                            <div id="ringkasan-pesanan" class="summary-enter mt-5 hidden">
-                                <img id="summary-image" src="./assets/burger-signin.png" alt="Menu dipilih" class="h-40 w-full rounded-xl bg-yellow-50 object-contain p-4">
-                                <div class="mt-4">
-                                    <p id="summary-partner" class="text-xs font-bold uppercase tracking-[.18em] text-slate-400">Partner</p>
-                                    <h3 id="summary-name" class="mt-1 text-xl font-black text-resqBlue">Menu</h3>
-                                    <div class="mt-4 flex items-center justify-between rounded-xl bg-slate-50 p-4">
-                                        <span class="text-sm font-bold text-slate-500">Total bayar</span>
-                                        <span id="summary-price" class="text-lg font-black text-resqBlue">Rp 0</span>
+                        <div class="hidden">
+                            <span id="impact-co2">0</span>
+                            <span id="impact-water">0</span>
+                            <span id="impact-points">0</span>
+                        </div>
+                    </section>
+
+                    <section id="makanan" class="app-screen">
+                        <div class="mb-8">
+                            <h1 class="text-4xl font-black tracking-tight text-resqBlue">Makanan Tersedia</h1>
+                            <p class="mt-3 text-sm font-medium text-slate-500">Cari makanan dari mitra, filter kategori, lalu pesan untuk pickup.</p>
+                        </div>
+
+                        <section class="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
+                            <div class="grid gap-3 md:grid-cols-[1fr_220px_180px_auto] md:items-center">
+                                <label class="relative block">
+                                    <i data-lucide="search" class="pointer-events-none absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-slate-400"></i>
+                                    <input id="input-cari" type="search" placeholder="Cari menu atau mitra..." class="h-12 w-full rounded-xl border border-slate-200 bg-slate-50 pl-12 pr-4 text-sm font-semibold outline-none transition focus:border-resqBlue focus:bg-white">
+                                </label>
+                                <div class="filter-dropdown" data-filter-dropdown>
+                                    <select id="filter-kategori" class="native-filter-select" aria-label="Filter kategori">
+                                        <option value="all">Semua kategori</option>
+                                        <option value="Ready Meal">Ready Meal</option>
+                                        <option value="Bakery">Bakery</option>
+                                        <option value="Sayur & Buah">Sayur & Buah</option>
+                                        <option value="Dairy">Dairy</option>
+                                    </select>
+                                    <button type="button" class="filter-trigger" aria-haspopup="listbox" aria-expanded="false">
+                                        <span class="filter-trigger-text">Semua kategori</span>
+                                        <i data-lucide="chevron-down" class="filter-chevron h-5 w-5"></i>
+                                    </button>
+                                    <div class="filter-menu" role="listbox">
+                                        <button type="button" class="filter-option is-selected" data-value="all" role="option" aria-selected="true">Semua kategori</button>
+                                        <button type="button" class="filter-option" data-value="Ready Meal" role="option">Ready Meal</button>
+                                        <button type="button" class="filter-option" data-value="Bakery" role="option">Bakery</button>
+                                        <button type="button" class="filter-option" data-value="Sayur & Buah" role="option">Sayur & Buah</button>
+                                        <button type="button" class="filter-option" data-value="Dairy" role="option">Dairy</button>
                                     </div>
-                                    <button id="btn-open-checkout" class="motion-button mt-4 w-full rounded-xl bg-resqYellow py-3 text-sm font-black text-resqNavy transition hover:bg-yellow-400">
-                                        Lanjut Checkout
+                                </div>
+                                <div class="filter-dropdown" data-filter-dropdown>
+                                    <select id="filter-stok" class="native-filter-select" aria-label="Filter stok">
+                                        <option value="all">Semua stok</option>
+                                        <option value="available">Tersedia</option>
+                                        <option value="low">Hampir habis</option>
+                                    </select>
+                                    <button type="button" class="filter-trigger" aria-haspopup="listbox" aria-expanded="false">
+                                        <span class="filter-trigger-text">Semua stok</span>
+                                        <i data-lucide="chevron-down" class="filter-chevron h-5 w-5"></i>
+                                    </button>
+                                    <div class="filter-menu" role="listbox">
+                                        <button type="button" class="filter-option is-selected" data-value="all" role="option" aria-selected="true">Semua stok</button>
+                                        <button type="button" class="filter-option" data-value="available" role="option">Tersedia</button>
+                                        <button type="button" class="filter-option" data-value="low" role="option">Hampir habis</button>
+                                    </div>
+                                </div>
+                                <button id="btn-reset-filter" class="motion-button h-12 rounded-xl bg-slate-100 px-5 text-sm font-black text-resqBlue transition hover:bg-slate-200">Reset</button>
+                            </div>
+                        </section>
+
+                        <section id="menu" class="mt-8 space-y-4">
+                            <div class="flex items-end justify-between gap-4">
+                                <div>
+                                    <p class="text-xs font-bold uppercase tracking-[.22em] text-slate-400">Daftar Mitra</p>
+                                    <h2 class="mt-1 text-2xl font-black text-resqBlue">Menu dari Mitra</h2>
+                                </div>
+                                <p id="jumlah-hasil" class="text-sm font-bold text-slate-500">Memuat...</p>
+                            </div>
+                            <div id="daftar-menu" class="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
+                                <div class="skeleton-card md:col-span-2 xl:col-span-3"></div>
+                            </div>
+                        </section>
+                    </section>
+
+                    <section id="peta" class="app-screen">
+                        <div class="mb-8">
+                            <h1 class="text-4xl font-black tracking-tight text-resqBlue">Peta Lokasi</h1>
+                            <p class="mt-3 text-sm font-medium text-slate-500">Temukan makanan surplus dari mitra di sekitarmu dengan mudah.</p>
+                        </div>
+                        <div class="relative rounded-xl border border-slate-200 bg-white p-2 shadow-sm">
+                            <div id="resq-map" class="h-[550px] w-full rounded-lg z-0"></div>
+                            <button id="btn-my-location" class="absolute bottom-6 right-6 z-[10] flex h-12 w-12 items-center justify-center rounded-full bg-white text-resqBlue shadow-md ring-1 ring-slate-200 transition hover:bg-slate-50" aria-label="Lokasi Saya">
+                                <i data-lucide="navigation" class="h-5 w-5"></i>
+                            </button>
+                        </div>
+                    </section>
+
+                    <section id="pesanan" class="app-screen">
+                        <div class="flex flex-col gap-6 md:flex-row md:items-end md:justify-between mb-8">
+                            <div>
+                                <h1 class="text-4xl font-black tracking-tight text-resqBlue">Pesanan Saya</h1>
+                                <p class="mt-2 text-sm font-medium text-slate-500">Pantau status makanan surplus yang telah kamu selamatkan.</p>
+                            </div>
+                            <div class="flex gap-2 overflow-x-auto pb-1 md:pb-0">
+                                <button class="filter-order active whitespace-nowrap rounded-xl bg-resqBlue px-5 py-2.5 text-xs font-black text-white transition" data-status="all">Semua</button>
+                                <button class="filter-order whitespace-nowrap rounded-xl bg-white px-5 py-2.5 text-xs font-black text-slate-600 ring-1 ring-slate-200 transition hover:bg-slate-50" data-status="Diproses">Diproses</button>
+                                <button class="filter-order whitespace-nowrap rounded-xl bg-white px-5 py-2.5 text-xs font-black text-slate-600 ring-1 ring-slate-200 transition hover:bg-slate-50" data-status="Siap Diambil">Siap Diambil</button>
+                                <button class="filter-order whitespace-nowrap rounded-xl bg-white px-5 py-2.5 text-xs font-black text-slate-600 ring-1 ring-slate-200 transition hover:bg-slate-50" data-status="Selesai">Selesai</button>
+                            </div>
+                        </div>
+
+                        <div class="grid gap-6 xl:grid-cols-[minmax(0,1fr)_340px]">
+                            <div id="daftar-pesanan" class="space-y-4">
+                                <!-- Orders will be rendered here -->
+                                <div class="flex h-64 flex-col items-center justify-center rounded-3xl border-2 border-dashed border-slate-200 bg-white p-12 text-center">
+                                    <div class="mb-4 rounded-full bg-slate-50 p-4">
+                                        <i data-lucide="shopping-bag" class="h-8 w-8 text-slate-300"></i>
+                                    </div>
+                                    <h3 class="text-lg font-black text-resqBlue">Memuat pesanan...</h3>
+                                    <p class="mt-1 text-sm font-medium text-slate-400">Tunggu sebentar ya, kami sedang mengambil data kamu.</p>
+                                </div>
+                            </div>
+
+                            <aside class="space-y-6">
+                                <div class="rounded-3xl bg-resqBlue p-6 text-white shadow-xl shadow-blue-100">
+                                    <h3 class="text-lg font-black italic tracking-tight">RESQ Impact</h3>
+                                    <p class="mt-2 text-sm font-medium leading-relaxed opacity-90">Kamu telah membantu mengurangi emisi CO2 dengan menyelamatkan makanan hari ini!</p>
+                                    <div class="mt-6 flex items-center gap-4 border-t border-white/20 pt-6">
+                                        <div class="flex-1">
+                                            <p class="text-[10px] font-black uppercase tracking-widest opacity-60">Makanan</p>
+                                            <p class="text-xl font-black" id="stat-orders-side">0</p>
+                                        </div>
+                                        <div class="flex-1">
+                                            <p class="text-[10px] font-black uppercase tracking-widest opacity-60">CO2 (kg)</p>
+                                            <p class="text-xl font-black" id="impact-co2-side">0.0</p>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
+                                    <h3 class="text-sm font-black text-resqBlue uppercase tracking-widest">Bantuan & Laporan</h3>
+                                    <p class="mt-3 text-xs font-medium leading-relaxed text-slate-500">Ada kendala dengan pesananmu? Hubungi pusat bantuan kami.</p>
+                                    <button class="mt-5 flex w-full items-center justify-center gap-2 rounded-2xl bg-slate-50 py-3.5 text-xs font-black text-resqBlue transition hover:bg-slate-100">
+                                        <i data-lucide="help-circle" class="h-4 w-4"></i>
+                                        Pusat Bantuan
                                     </button>
                                 </div>
-                            </div>
-                        </section>
-                    </div>
-                </section>
-
-                <section id="favorit" class="app-screen">
-                    <div class="mb-8">
-                        <h1 class="text-4xl font-black tracking-tight text-resqBlue">Daftar Favorit</h1>
-                        <p class="mt-3 text-sm font-medium text-slate-500">Kumpulan toko dan menu favoritmu untuk akses lebih cepat.</p>
-                    </div>
-                    <div id="daftar-favorit" class="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
-                        <div class="rounded-[22px] bg-slate-50 p-8 text-center md:col-span-2 xl:col-span-3">
-                            <i data-lucide="heart" class="mx-auto h-12 w-12 text-slate-300"></i>
-                            <p class="mt-4 text-sm font-bold text-slate-500">Belum ada item favorit.</p>
+                            </aside>
                         </div>
-                    </div>
-                </section>
+                    </section>
 
-                <section id="profil" class="app-screen">
-                    <div class="mb-8">
-                        <h1 class="text-4xl font-black tracking-tight text-resqBlue">Profil</h1>
-                        <p class="mt-3 text-sm font-medium text-slate-500">Lihat data akun, ubah profil, dan ubah kata sandi.</p>
-                    </div>
-                    <div class="grid gap-6 xl:grid-cols-[minmax(0,1fr)_390px]">
-                        <section class="rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
-                            <h2 class="text-xl font-black text-resqBlue">Data Akun Pengguna</h2>
-                            <div class="mt-6 grid gap-4 md:grid-cols-2">
-                                <label class="text-sm font-bold text-resqBlue">Nama
-                                    <input id="profile-name" class="mt-2 h-12 w-full rounded-xl border border-slate-200 px-4 text-sm font-semibold outline-none focus:border-resqBlue" value="User Name">
-                                </label>
-                                <label class="text-sm font-bold text-resqBlue">Email
-                                    <input id="profile-email" class="mt-2 h-12 w-full rounded-xl border border-slate-200 bg-slate-50 px-4 text-sm font-semibold text-slate-500 outline-none" value="user@example.com" readonly>
-                                </label>
-                                <label class="text-sm font-bold text-resqBlue">Nomor HP
-                                    <input class="mt-2 h-12 w-full rounded-xl border border-slate-200 px-4 text-sm font-semibold outline-none focus:border-resqBlue" placeholder="+62 812 0000 0000">
-                                </label>
-                                <label class="text-sm font-bold text-resqBlue">Lokasi
-                                    <input class="mt-2 h-12 w-full rounded-xl border border-slate-200 px-4 text-sm font-semibold outline-none focus:border-resqBlue" placeholder="Kota / Kecamatan">
-                                </label>
+                    <section id="favorit" class="app-screen">
+                        <div class="mb-8">
+                            <h1 class="text-4xl font-black tracking-tight text-resqBlue">Daftar Favorit</h1>
+                            <p class="mt-3 text-sm font-medium text-slate-500">Kumpulan toko dan menu favoritmu untuk akses lebih cepat.</p>
+                        </div>
+                        <div id="daftar-favorit" class="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
+                            <div class="rounded-[22px] bg-slate-50 p-8 text-center md:col-span-2 xl:col-span-3">
+                                <i data-lucide="heart" class="mx-auto h-12 w-12 text-slate-300"></i>
+                                <p class="mt-4 text-sm font-bold text-slate-500">Belum ada item favorit.</p>
                             </div>
-                            <button id="btn-save-profile" class="motion-button mt-6 rounded-xl bg-resqBlue px-5 py-3 text-sm font-black text-white transition hover:bg-slate-800">Simpan Profil</button>
-                        </section>
+                        </div>
+                    </section>
 
-                        <section class="rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
-                            <h2 class="text-xl font-black text-resqBlue">Ubah Kata Sandi</h2>
-                            <div class="mt-6 space-y-4">
-                                <label class="block text-sm font-bold text-resqBlue">Kata sandi lama
-                                    <input type="password" class="mt-2 h-12 w-full rounded-xl border border-slate-200 px-4 text-sm font-semibold outline-none focus:border-resqBlue">
-                                </label>
-                                <label class="block text-sm font-bold text-resqBlue">Kata sandi baru
-                                    <input type="password" class="mt-2 h-12 w-full rounded-xl border border-slate-200 px-4 text-sm font-semibold outline-none focus:border-resqBlue">
-                                </label>
-                                <button id="btn-change-password" class="motion-button w-full rounded-xl bg-slate-100 px-5 py-3 text-sm font-black text-resqBlue transition hover:bg-slate-200">Perbarui Kata Sandi</button>
-                            </div>
-                        </section>
-                    </div>
-                </section>
+                    <section id="profil" class="app-screen">
+                        <div class="mb-8">
+                            <h1 class="text-4xl font-black tracking-tight text-resqBlue">Profil</h1>
+                            <p class="mt-3 text-sm font-medium text-slate-500">Lihat data akun, ubah profil, dan ubah kata sandi.</p>
+                        </div>
+                        <div class="grid gap-6 xl:grid-cols-[minmax(0,1fr)_390px]">
+                            <section class="rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
+                                <h2 class="text-xl font-black text-resqBlue">Data Akun Pengguna</h2>
+                                <div class="mt-6 grid gap-4 md:grid-cols-2">
+                                    <label class="text-sm font-bold text-resqBlue">Nama
+                                        <input id="profile-name" class="mt-2 h-12 w-full rounded-xl border border-slate-200 px-4 text-sm font-semibold outline-none focus:border-resqBlue" value="User Name">
+                                    </label>
+                                    <label class="text-sm font-bold text-resqBlue">Email
+                                        <input id="profile-email" class="mt-2 h-12 w-full rounded-xl border border-slate-200 bg-slate-50 px-4 text-sm font-semibold text-slate-500 outline-none" value="user@example.com" readonly>
+                                    </label>
+                                    <label class="text-sm font-bold text-resqBlue">Nomor HP
+                                        <input class="mt-2 h-12 w-full rounded-xl border border-slate-200 px-4 text-sm font-semibold outline-none focus:border-resqBlue" placeholder="+62 812 0000 0000">
+                                    </label>
+                                    <label class="text-sm font-bold text-resqBlue">Lokasi
+                                        <input class="mt-2 h-12 w-full rounded-xl border border-slate-200 px-4 text-sm font-semibold outline-none focus:border-resqBlue" placeholder="Kota / Kecamatan">
+                                    </label>
+                                </div>
+                                <button id="btn-save-profile" class="motion-button mt-6 rounded-xl bg-resqBlue px-5 py-3 text-sm font-black text-white transition hover:bg-slate-800">Simpan Profil</button>
+                            </section>
+
+                            <section class="rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
+                                <h2 class="text-xl font-black text-resqBlue">Ubah Kata Sandi</h2>
+                                <div class="mt-6 space-y-4">
+                                    <label class="block text-sm font-bold text-resqBlue">Kata sandi lama
+                                        <input type="password" class="mt-2 h-12 w-full rounded-xl border border-slate-200 px-4 text-sm font-semibold outline-none focus:border-resqBlue">
+                                    </label>
+                                    <label class="block text-sm font-bold text-resqBlue">Kata sandi baru
+                                        <input type="password" class="mt-2 h-12 w-full rounded-xl border border-slate-200 px-4 text-sm font-semibold outline-none focus:border-resqBlue">
+                                    </label>
+                                    <button id="btn-change-password" class="motion-button w-full rounded-xl bg-slate-100 px-5 py-3 text-sm font-black text-resqBlue transition hover:bg-slate-200">Perbarui Kata Sandi</button>
+                                </div>
+                            </section>
+                        </div>
+                    </section>
+                </div>
             </main>
         </div>
     </div>

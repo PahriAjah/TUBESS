@@ -59,6 +59,11 @@ const btnKirimUlasan = byId("btn-kirim-ulasan");
 const ratingStars = document.querySelectorAll("#rating-stars button");
 const ulasanTeks = byId("ulasan-teks");
 
+const btnNotification = byId("btn-notification");
+const notificationPopover = byId("notification-popover");
+const notificationDot = byId("notification-dot");
+const notificationStatus = byId("notification-status");
+
 let selectedMenu = null;
 let userEmail = "Guest";
 let menus = [];
@@ -149,19 +154,76 @@ document.querySelectorAll(".dashboard-toast-trigger").forEach((button) => {
     button.addEventListener("click", () => showDashboardToast(`${button.textContent.trim()} dipilih`));
 });
 
-[menuContainer, latestMenuContainer].forEach((container) => container?.addEventListener("click", (event) => {
+document.querySelectorAll(".filter-order").forEach((button) => {
+    button.addEventListener("click", () => {
+        const status = button.dataset.status || "all";
+        document.querySelectorAll(".filter-order").forEach((item) => {
+            const isActive = item === button;
+            item.classList.toggle("active", isActive);
+            item.classList.toggle("bg-resqBlue", isActive);
+            item.classList.toggle("text-white", isActive);
+            item.classList.toggle("bg-white", !isActive);
+            item.classList.toggle("text-slate-600", !isActive);
+            item.classList.toggle("ring-1", !isActive);
+            item.classList.toggle("ring-slate-200", !isActive);
+        });
+        
+        if (status === "all") {
+            renderOrders(userOrders);
+        } else {
+            renderOrders(userOrders.filter(o => o.status === status));
+        }
+    });
+});
+
+// Global listener for all menu item selection buttons
+document.addEventListener("click", (event) => {
     const button = event.target.closest("[data-order]");
     if (!button) return;
 
-    const item = menus.find((menu) => menu.id === button.dataset.id || menu.id === button.dataset.order);
+    const id = button.dataset.id || button.dataset.order;
+    if (!id) return;
+
+    const item = menus.find((menu) => menu.id === id);
     if (!item) return;
 
     selectMenu(item);
-    activateScreen("pesanan");
-}));
+    openModal();
+});
 
 document.querySelectorAll(".app-nav").forEach((button) => {
     button.addEventListener("click", () => activateScreen(button.dataset.target));
+});
+
+btnNotification?.addEventListener("click", (event) => {
+    event.stopPropagation();
+    const isHidden = notificationPopover.classList.contains("hidden");
+    
+    if (isHidden) {
+        notificationPopover.classList.remove("hidden");
+        btnNotification.setAttribute("aria-expanded", "true");
+        
+        // Mark as read automatically when opened
+        if (notificationDot) {
+            notificationDot.classList.add("hidden");
+        }
+        if (notificationStatus) {
+            notificationStatus.innerText = "Tidak ada yang baru";
+            notificationStatus.className = "rounded-full bg-slate-100 px-3 py-1 text-[11px] font-black text-slate-400";
+        }
+    } else {
+        notificationPopover.classList.add("hidden");
+        btnNotification.setAttribute("aria-expanded", "false");
+    }
+});
+
+document.addEventListener("click", (event) => {
+    if (notificationPopover && !notificationPopover.classList.contains("hidden")) {
+        if (!notificationPopover.contains(event.target) && !btnNotification.contains(event.target)) {
+            notificationPopover.classList.add("hidden");
+            btnNotification.setAttribute("aria-expanded", "false");
+        }
+    }
 });
 
 byId("mobile-menu-toggle")?.addEventListener("click", () => {
@@ -336,7 +398,9 @@ async function loadMenus() {
         const data = [];
 
         snapshot.forEach((childSnapshot) => {
-            data.push({ id: childSnapshot.key, ...childSnapshot.val() });
+            const val = childSnapshot.val();
+            // childSnapshot.key is the definitive Firebase ID
+            data.push({ ...val, firebaseId: childSnapshot.key });
         });
 
         const uniquePartners = [...new Set(data.map(item => item.restaurant_id || "Partner RESQ"))];
@@ -349,7 +413,7 @@ async function loadMenus() {
             const lng = 107.6098 + (Math.cos(i * 1.5) * 0.02);
             
             menus.push({
-                id: item.id,
+                id: item.firebaseId, // Use the key we just saved
                 name: item.name || "Menu RESQ",
                 stock: Number(item.stock) || 0,
                 price: Number(item.surplus_price) || 0,
@@ -367,10 +431,10 @@ async function loadMenus() {
         renderDashboardMenus();
     } catch (error) {
         console.error("Menu error:", error);
-        menuContainer.innerHTML = emptyState("Gagal memuat menu. Silakan coba lagi nanti.");
-        resultCount.innerText = "Gagal memuat";
-        latestMenuContainer.innerHTML = emptyState("Gagal memuat makanan terbaru.");
-        recommendationContainer.innerHTML = emptyState("Gagal memuat rekomendasi.");
+        if (menuContainer) menuContainer.innerHTML = emptyState("Gagal memuat menu. Silakan coba lagi nanti.");
+        if (resultCount) resultCount.innerText = "Gagal memuat";
+        if (latestMenuContainer) latestMenuContainer.innerHTML = emptyState("Gagal memuat makanan terbaru.");
+        if (recommendationContainer) recommendationContainer.innerHTML = emptyState("Gagal memuat rekomendasi.");
     }
 }
 
@@ -507,27 +571,73 @@ function renderFavorites() {
 
 function renderOrders(orders) {
     if (!orders.length) {
-        orderList.innerHTML = `<p class="rounded-2xl bg-slate-50 p-4 text-sm font-semibold text-slate-500">Belum ada pesanan aktif.</p>`;
+        orderList.innerHTML = `
+            <div class="flex h-64 flex-col items-center justify-center rounded-3xl border-2 border-dashed border-slate-200 bg-white p-12 text-center">
+                <div class="mb-4 rounded-full bg-slate-50 p-4">
+                    <i data-lucide="shopping-bag" class="h-8 w-8 text-slate-300"></i>
+                </div>
+                <h3 class="text-lg font-black text-resqBlue">Belum ada pesanan</h3>
+                <p class="mt-1 text-sm font-medium text-slate-400">Pesanan yang kamu buat akan tampil di sini.</p>
+            </div>
+        `;
+        window.lucide?.createIcons();
         return;
     }
 
-    orderList.innerHTML = orders.map((order, index) => `
-        <article class="order-item rounded-2xl border border-slate-200 bg-white p-4" style="animation-delay:${index * 70}ms">
-            <div class="flex items-start justify-between gap-3">
-                <div>
-                    <h3 class="text-sm font-black text-resqBlue">${escapeHtml(order.name)}</h3>
-                    <p class="mt-1 text-xs font-semibold text-slate-500">${escapeHtml(order.method)} &middot; ${formatRupiah(order.price)}</p>
+    orderList.innerHTML = orders.map((order, index) => {
+        const menu = menus.find(m => m.id === order.product_id || m.name === order.name);
+        const imageUrl = menu ? menu.imageUrl : "./assets/burger-signin.png";
+        const date = order.timestamp ? new Date(order.timestamp).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' }) : "-";
+        
+        return `
+            <article class="order-item group flex flex-col overflow-hidden rounded-[28px] border border-slate-200 bg-white shadow-sm transition-all hover:border-resqBlue/30 hover:shadow-md md:flex-row" style="animation-delay:${index * 60}ms">
+                <div class="relative h-44 w-full shrink-0 bg-slate-50 p-4 md:h-auto md:w-48">
+                    <img src="${imageUrl}" alt="${escapeHtml(order.name)}" class="h-full w-full object-contain mix-blend-multiply transition-transform duration-500 group-hover:scale-110">
+                    <div class="absolute inset-0 bg-gradient-to-t from-slate-900/5 to-transparent"></div>
                 </div>
-                <span class="rounded-full px-3 py-1 text-[11px] font-black ${statusClass(order.status)}">${escapeHtml(order.status)}</span>
-            </div>
-            <div class="mt-3 flex items-center justify-between gap-3">
-                <div class="rounded-xl bg-slate-50 px-3 py-2 text-xs font-black tracking-wide text-resqBlue">
-                    Kode: ${escapeHtml(order.code)}
+                <div class="flex flex-1 flex-col p-6">
+                    <div class="flex flex-wrap items-start justify-between gap-3">
+                        <div>
+                            <div class="flex items-center gap-2">
+                                <span class="text-[10px] font-black uppercase tracking-widest text-slate-400">${date}</span>
+                                <span class="h-1 w-1 rounded-full bg-slate-300"></span>
+                                <span class="text-[10px] font-black uppercase tracking-widest text-resqBlue">${escapeHtml(order.method)}</span>
+                            </div>
+                            <h3 class="mt-1 text-lg font-black text-resqBlue">${escapeHtml(order.name)}</h3>
+                        </div>
+                        <span class="rounded-full px-4 py-1.5 text-[11px] font-black shadow-sm ${statusClass(order.status)}">${escapeHtml(order.status)}</span>
+                    </div>
+                    
+                    <div class="mt-auto pt-6 flex flex-wrap items-center justify-between gap-4 border-t border-slate-100">
+                        <div class="flex items-center gap-4">
+                            <div>
+                                <p class="text-[10px] font-black uppercase tracking-widest text-slate-400">Kode Pickup</p>
+                                <p class="mt-0.5 font-mono text-sm font-black text-resqBlue">${escapeHtml(order.code)}</p>
+                            </div>
+                            <div class="h-8 w-px bg-slate-100"></div>
+                            <div>
+                                <p class="text-[10px] font-black uppercase tracking-widest text-slate-400">Total Bayar</p>
+                                <p class="mt-0.5 text-sm font-black text-resqBlue">${formatRupiah(order.price)}</p>
+                            </div>
+                        </div>
+                        
+                        <div class="flex items-center gap-2">
+                            ${order.status === "Selesai" ? `
+                                <button data-ulasan="${escapeHtml(order.id)}" class="motion-button flex items-center gap-2 rounded-xl bg-slate-100 px-5 py-2.5 text-xs font-black text-resqBlue transition hover:bg-slate-200">
+                                    <i data-lucide="star" class="h-3.5 w-3.5"></i>
+                                    Beri Ulasan
+                                </button>
+                            ` : ""}
+                            <button class="motion-button flex h-10 w-10 items-center justify-center rounded-xl bg-slate-50 text-slate-400 transition hover:bg-resqBlue hover:text-white" aria-label="Detail Pesanan">
+                                <i data-lucide="chevron-right" class="h-5 w-5"></i>
+                            </button>
+                        </div>
+                    </div>
                 </div>
-                ${order.status === "Selesai" ? `<button data-ulasan="${escapeHtml(order.id)}" class="motion-button rounded-lg bg-slate-100 px-3 py-2 text-[11px] font-black text-resqBlue hover:bg-slate-200">Beri Ulasan</button>` : ""}
-            </div>
-        </article>
-    `).join("");
+            </article>
+        `;
+    }).join("");
+    window.lucide?.createIcons();
 }
 
 function updateStats() {
@@ -542,40 +652,54 @@ function updateStats() {
     animateNumber(savedFoodStat, savedOrders);
     animateNumber(readyOrdersStat, readyOrders);
 
-    animateNumber(impactCo2, savedOrders * 2.5);
+    animateNumber(impactCo2, savedOrders * 2.5, true);
     animateNumber(impactWater, savedOrders * 150);
     animateNumber(impactPoints, savedOrders * 50);
+
+    const sideOrdersStat = byId("stat-orders-side");
+    const sideCo2Stat = byId("impact-co2-side");
+    if (sideOrdersStat) animateNumber(sideOrdersStat, userOrders.length);
+    if (sideCo2Stat) animateNumber(sideCo2Stat, savedOrders * 2.5, true);
 }
 
 function selectMenu(item) {
     selectedMenu = item;
 
-    selectedBadge.innerText = "Dipilih";
-    selectedBadge.className = "rounded-full bg-yellow-100 px-3 py-1 text-xs font-black text-resqBlue";
-    emptySummary.classList.add("hidden");
-    orderSummary.classList.remove("hidden");
+    if (selectedBadge) {
+        selectedBadge.innerText = "Dipilih";
+        selectedBadge.className = "rounded-full bg-yellow-100 px-3 py-1 text-xs font-black text-resqBlue";
+    }
+    
+    if (emptySummary) emptySummary.classList.add("hidden");
+    if (orderSummary) {
+        orderSummary.classList.remove("hidden");
+        orderSummary.classList.remove("selected-pulse");
+        requestAnimationFrame(() => orderSummary.classList.add("selected-pulse"));
+    }
 
-    summaryImage.src = item.imageUrl;
-    summaryImage.alt = item.name;
-    summaryPartner.innerText = item.restaurantId;
-    summaryName.innerText = item.name;
-    summaryPrice.innerText = formatRupiah(item.price);
+    if (summaryImage) {
+        summaryImage.src = item.imageUrl;
+        summaryImage.alt = item.name;
+    }
+    if (summaryPartner) summaryPartner.innerText = item.restaurantId;
+    if (summaryName) summaryName.innerText = item.name;
+    if (summaryPrice) summaryPrice.innerText = formatRupiah(item.price);
 
-    orderSummary.classList.remove("selected-pulse");
-    requestAnimationFrame(() => orderSummary.classList.add("selected-pulse"));
-
-    modalPartner.innerText = item.restaurantId;
-    modalName.innerText = item.name;
-    modalPrice.innerText = formatRupiah(item.price);
+    if (modalPartner) modalPartner.innerText = item.restaurantId;
+    if (modalName) modalName.innerText = item.name;
+    if (modalPrice) modalPrice.innerText = formatRupiah(item.price);
+    
     updatePaymentPreview();
 }
 
 function clearSelection() {
     selectedMenu = null;
-    selectedBadge.innerText = "Kosong";
-    selectedBadge.className = "rounded-full bg-slate-100 px-3 py-1 text-xs font-black text-slate-500";
-    emptySummary.classList.remove("hidden");
-    orderSummary.classList.add("hidden");
+    if (selectedBadge) {
+        selectedBadge.innerText = "Kosong";
+        selectedBadge.className = "rounded-full bg-slate-100 px-3 py-1 text-xs font-black text-slate-500";
+    }
+    if (emptySummary) emptySummary.classList.remove("hidden");
+    if (orderSummary) orderSummary.classList.add("hidden");
 }
 
 function menuCard(item, index = 0) {
@@ -722,7 +846,12 @@ function activateScreen(target) {
     document.querySelectorAll(".app-nav").forEach((button) => {
         const isActive = button.dataset.target === target;
         button.classList.toggle("nav-active", isActive);
-        button.classList.toggle("text-slate-600", !isActive);
+        
+        // Handle color and visibility for simple icon buttons that don't use the underline
+        if (button.querySelector("i") && !button.querySelector("span")) {
+            button.classList.toggle("text-resqBlue", isActive);
+            button.classList.toggle("text-slate-600", !isActive);
+        }
     });
 
     byId("mobile-menu")?.classList.add("hidden");
@@ -777,18 +906,20 @@ function closeModal() {
     modal.classList.remove("flex");
 }
 
-function animateNumber(element, targetValue) {
+function animateNumber(element, targetValue, isDecimal = false) {
     if (!element) return;
 
     const target = Number(targetValue) || 0;
-    const start = Number(element.innerText) || 0;
+    const start = parseFloat(element.innerText) || 0;
     const duration = 520;
     const startedAt = performance.now();
 
     function tick(now) {
         const progress = Math.min((now - startedAt) / duration, 1);
         const eased = 1 - Math.pow(1 - progress, 3);
-        element.innerText = Math.round(start + (target - start) * eased);
+        const current = start + (target - start) * eased;
+        
+        element.innerText = isDecimal ? current.toFixed(1) : Math.round(current);
 
         if (progress < 1) {
             requestAnimationFrame(tick);
