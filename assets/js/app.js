@@ -132,13 +132,14 @@ document.querySelectorAll("[data-dashboard-category]").forEach((button) => {
         dashboardCategory = button.dataset.dashboardCategory || "all";
         document.querySelectorAll("[data-dashboard-category]").forEach((item) => {
             const isActive = item === button;
-            item.classList.toggle("bg-resqBlue", isActive);
-            item.classList.toggle("text-white", isActive);
+            item.classList.toggle("is-active", isActive);
+            item.classList.toggle("bg-resqYellow", isActive);
+            item.classList.toggle("text-resqNavy", isActive);
+            item.classList.toggle("border-resqNavy", isActive);
+            
             item.classList.toggle("bg-white", !isActive);
             item.classList.toggle("text-slate-700", !isActive);
-            item.classList.toggle("shadow-sm", !isActive);
-            item.classList.toggle("ring-1", !isActive);
-            item.classList.toggle("ring-slate-200", !isActive);
+            item.classList.toggle("border-slate-200", !isActive);
         });
         renderDashboardMenus();
     });
@@ -774,29 +775,28 @@ function compactMenuCard(item, index = 0) {
     const isFav = favoriteIds.has(item.id);
     const heartColor = isFav ? "text-red-500" : "text-slate-400";
     const heartFill = isFav ? "fill-current" : "";
-    const isFeatured = index === 1;
 
     return `
         <article class="product-card group flex flex-col" style="animation-delay:${index * 60}ms">
-            <div class="relative mb-4 flex aspect-square items-center justify-center overflow-hidden rounded-[20px] bg-slate-50 p-6">
-                <button data-favorite="${escapeHtml(item.id)}" class="absolute right-3 top-3 z-10 flex h-8 w-8 items-center justify-center rounded-full bg-white ${heartColor} shadow-sm transition-transform hover:scale-110 hover:text-red-500" aria-label="Favorit">
+            <div class="relative mb-4 flex aspect-square items-center justify-center overflow-hidden rounded-[24px] bg-slate-100/60 p-6 ring-1 ring-slate-200/50 shadow-inner">
+                <button data-favorite="${escapeHtml(item.id)}" class="absolute right-3 top-3 z-10 flex h-8 w-8 items-center justify-center rounded-full bg-white/90 ${heartColor} shadow-sm backdrop-blur transition-transform hover:scale-110 hover:text-red-500" aria-label="Favorit">
                     <i data-lucide="heart" class="h-4 w-4 ${heartFill} transition-colors duration-200"></i>
                 </button>
-                <img src="${escapeHtml(item.imageUrl)}" alt="${escapeHtml(item.name)}" class="h-full w-full object-contain transition duration-300 group-hover:scale-105" onerror="this.src='./assets/burger-signin.png'">
+                <img src="${escapeHtml(item.imageUrl)}" alt="${escapeHtml(item.name)}" class="h-full w-full object-contain transition duration-500 group-hover:scale-110" onerror="this.src='./assets/burger-signin.png'">
             </div>
-            <div class="mb-1 flex items-start justify-between gap-3">
+            <div class="mb-1 flex items-start justify-between gap-3 px-1">
                 <h3 class="product-title text-[15px] font-black leading-snug text-resqBlue">${escapeHtml(item.name)}</h3>
                 <span class="shrink-0 text-[15px] font-black text-resqBlue">${formatRupiah(item.price)}</span>
             </div>
-            <p class="mb-2 text-xs font-semibold text-slate-500">${escapeHtml(item.restaurantId)} &middot; ${escapeHtml(item.category)}</p>
-            <div class="mb-3 flex items-center gap-1">
+            <p class="mb-2 px-1 text-xs font-semibold text-slate-500">${escapeHtml(item.restaurantId)} &middot; ${escapeHtml(item.category)}</p>
+            <div class="mb-4 flex items-center gap-1 px-1">
                 <div class="flex text-sm text-resqYellow">
                     <i class="ph-fill ph-star"></i><i class="ph-fill ph-star"></i><i class="ph-fill ph-star"></i><i class="ph-fill ph-star"></i><i class="ph-fill ph-star"></i>
                 </div>
                 <span class="ml-1 text-xs font-semibold text-slate-500">(${Math.max(12, item.stock * 9)})</span>
             </div>
-            <button data-order data-id="${escapeHtml(item.id)}" class="add-to-cart-btn mt-auto w-fit rounded-full ${isFeatured ? "border border-resqBlue bg-resqBlue text-white hover:bg-slate-800" : "border border-slate-300 text-resqBlue hover:border-resqBlue"} px-5 py-2 text-xs font-black transition" ${item.stock <= 0 ? "disabled" : ""}>
-                Pesan
+            <button data-order data-id="${escapeHtml(item.id)}" class="add-to-cart-btn mt-auto w-full rounded-2xl bg-resqNavy px-5 py-3 text-xs font-black text-white transition hover:bg-slate-800 active:scale-95 disabled:opacity-50" ${item.stock <= 0 ? "disabled" : ""}>
+                Pesan Sekarang
             </button>
         </article>
     `;

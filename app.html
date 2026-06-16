@@ -141,17 +141,29 @@
                                     Kategori <i class="ph ph-caret-down"></i>
                                 </button>
                             </li>
-                            <li><button data-target="makanan" class="app-nav hover:text-resqBlue">Special Deals</button></li>
                         </ul>
 
-                        <div class="relative hidden max-w-md flex-1 items-center rounded-full bg-slate-100 px-4 py-2 md:flex">
-                            <input id="dashboard-search" type="search" placeholder="Cari makanan surplus" class="w-full border-none bg-transparent text-sm font-semibold text-slate-700 outline-none placeholder-slate-400">
-                            <i class="ph ph-magnifying-glass absolute right-4 cursor-pointer text-lg text-slate-500"></i>
+                        <div class="relative hidden max-w-3xl flex-1 items-center rounded-full bg-slate-100 py-2.5 md:flex">
+                            <input id="dashboard-search" type="search" placeholder="Cari makanan surplus terbaik..." class="w-full border-none bg-transparent pl-6 pr-14 text-sm font-semibold text-slate-700 outline-none placeholder-slate-400">
+                            <i class="ph ph-magnifying-glass absolute right-5 cursor-pointer text-xl text-slate-500"></i>
                         </div>
 
                         <div class="flex flex-shrink-0 items-center gap-4 text-sm font-bold text-slate-600 lg:gap-6">
                             <i class="ph ph-magnifying-glass cursor-pointer text-2xl hover:text-resqBlue md:hidden"></i>
                             
+                            <button data-target="favorit" class="app-nav flex items-center gap-1.5 hover:text-resqBlue">
+                                <i class="ph ph-heart text-xl"></i>
+                                <span class="hidden xl:block">Favorit</span>
+                            </button>
+                            <button data-target="pesanan" class="app-nav flex items-center gap-1.5 hover:text-resqBlue">
+                                <i class="ph ph-shopping-cart text-xl"></i>
+                                <span class="hidden xl:block">Pesanan</span>
+                            </button>
+                            <button data-target="profil" class="app-nav flex items-center gap-1.5 hover:text-resqBlue">
+                                <i class="ph ph-user text-xl"></i>
+                                <span class="hidden xl:block">Akun</span>
+                            </button>
+
                             <div class="relative">
                                 <button id="btn-notification" type="button" class="flex items-center gap-1.5 hover:text-resqBlue" aria-label="Buka notifikasi" aria-expanded="false">
                                     <div class="relative">
@@ -201,18 +213,6 @@
                                 </div>
                             </div>
 
-                            <button data-target="favorit" class="app-nav flex items-center gap-1.5 hover:text-resqBlue">
-                                <i class="ph ph-heart text-xl"></i>
-                                <span class="hidden xl:block">Favorit</span>
-                            </button>
-                            <button data-target="pesanan" class="app-nav flex items-center gap-1.5 hover:text-resqBlue">
-                                <i class="ph ph-shopping-cart text-xl"></i>
-                                <span class="hidden xl:block">Pesanan</span>
-                            </button>
-                            <button data-target="profil" class="app-nav flex items-center gap-1.5 hover:text-resqBlue">
-                                <i class="ph ph-user text-xl"></i>
-                                <span class="hidden xl:block">Akun</span>
-                            </button>
                             <button id="btn-logout-top" class="flex items-center gap-1.5 hover:text-red-600">
                                 <i class="ph ph-sign-out text-xl"></i>
                                 <span class="hidden xl:block">Keluar</span>
@@ -223,46 +223,40 @@
 
                 <div class="mx-auto max-w-[1200px] px-4 py-8">
                     <section id="dashboard" class="app-screen active text-resqNavy">
-                        <section class="relative flex h-auto flex-col items-center justify-between overflow-hidden rounded-[24px] bg-[#fff4cf] px-8 py-8 md:h-[280px] md:flex-row md:px-16 md:py-0">
-                            <div class="z-10 mb-8 max-w-md md:mb-0">
-                                <h1 class="mb-6 text-4xl font-black leading-tight text-resqBlue md:text-[42px]">
+                        <section class="relative flex h-auto flex-col items-center justify-between overflow-hidden rounded-[32px] bg-[#fff4cf] px-8 py-10 md:h-[340px] md:flex-row md:px-20 md:py-0">
+                            <div class="z-10 mb-8 max-w-xl md:mb-0">
+                                <h1 class="mb-8 text-4xl font-black leading-[1.1] text-resqBlue md:text-[52px]">
                                     Selamatkan makanan enak<br>hingga 50% lebih hemat
                                 </h1>
-                                <button data-target="makanan" class="app-nav rounded-full bg-resqBlue px-8 py-3 font-black text-white shadow-sm transition hover:bg-slate-800">
+                                <button data-target="makanan" class="app-nav rounded-full bg-resqBlue px-10 py-4 font-black text-white shadow-lg transition hover:bg-slate-800 hover:scale-105 active:scale-95">
                                     Pesan Sekarang
                                 </button>
                             </div>
-                            <div class="relative flex h-[200px] w-full items-end justify-end md:h-full md:w-[45%]">
+                            <div class="relative flex h-[240px] w-full items-end justify-end md:h-full md:w-[42%]">
                                 <img src="./assets/chef.png" alt="Makanan surplus RESQ" class="h-full w-full rounded-bl-[100px] object-contain object-bottom opacity-95 mix-blend-multiply">
                             </div>
                         </section>
 
-                        <section class="mb-10 mt-8 flex flex-wrap items-center justify-between gap-4">
+                        <section class="mb-10 mt-12 flex flex-wrap items-center justify-between gap-4">
                             <div class="no-scrollbar flex w-full items-center gap-2 overflow-x-auto pb-2 md:w-auto md:pb-0 lg:gap-3">
-                                <button data-dashboard-category="all" class="dashboard-filter flex items-center gap-1.5 whitespace-nowrap rounded-full bg-resqBlue px-4 py-2 text-[13px] font-black text-white transition hover:bg-slate-800">
-                                    Semua Menu <i class="ph ph-caret-down text-resqYellow"></i>
+                                <button data-dashboard-category="all" class="dashboard-filter is-active flex items-center gap-1.5 whitespace-nowrap rounded-full bg-resqYellow px-5 py-2.5 text-[14px] font-black text-resqNavy border border-resqNavy transition">
+                                    Semua Menu <i class="ph ph-caret-down text-resqNavy"></i>
                                 </button>
-                                <button data-dashboard-category="Ready Meal" class="dashboard-filter flex items-center gap-1.5 whitespace-nowrap rounded-full bg-white px-4 py-2 text-[13px] font-bold text-slate-700 shadow-sm ring-1 ring-slate-200 transition hover:text-resqBlue">
+                                <button data-dashboard-category="Ready Meal" class="dashboard-filter flex items-center gap-1.5 whitespace-nowrap rounded-full bg-white px-5 py-2.5 text-[14px] font-bold text-slate-700 shadow-sm border border-slate-200 transition">
                                     Ready Meal <i class="ph ph-caret-down text-slate-500"></i>
                                 </button>
-                                <button data-dashboard-category="Bakery" class="dashboard-filter flex items-center gap-1.5 whitespace-nowrap rounded-full bg-white px-4 py-2 text-[13px] font-bold text-slate-700 shadow-sm ring-1 ring-slate-200 transition hover:text-resqBlue">
+                                <button data-dashboard-category="Bakery" class="dashboard-filter flex items-center gap-1.5 whitespace-nowrap rounded-full bg-white px-5 py-2.5 text-[14px] font-bold text-slate-700 shadow-sm border border-slate-200 transition">
                                     Bakery <i class="ph ph-caret-down text-slate-500"></i>
                                 </button>
-                                <button data-dashboard-category="Sayur & Buah" class="dashboard-filter flex items-center gap-1.5 whitespace-nowrap rounded-full bg-white px-4 py-2 text-[13px] font-bold text-slate-700 shadow-sm ring-1 ring-slate-200 transition hover:text-resqBlue">
+                                <button data-dashboard-category="Sayur & Buah" class="dashboard-filter flex items-center gap-1.5 whitespace-nowrap rounded-full bg-white px-5 py-2.5 text-[14px] font-bold text-slate-700 shadow-sm border border-slate-200 transition">
                                     Sayur & Buah <i class="ph ph-caret-down text-slate-500"></i>
                                 </button>
-                                <button data-dashboard-category="Dairy" class="dashboard-filter flex items-center gap-1.5 whitespace-nowrap rounded-full bg-white px-4 py-2 text-[13px] font-bold text-slate-700 shadow-sm ring-1 ring-slate-200 transition hover:text-resqBlue">
+                                <button data-dashboard-category="Dairy" class="dashboard-filter flex items-center gap-1.5 whitespace-nowrap rounded-full bg-white px-5 py-2.5 text-[14px] font-bold text-slate-700 shadow-sm border border-slate-200 transition">
                                     Dairy <i class="ph ph-caret-down text-slate-500"></i>
-                                </button>
-                                <button type="button" class="dashboard-toast-trigger flex items-center gap-1.5 whitespace-nowrap rounded-full bg-white px-4 py-2 text-[13px] font-bold text-slate-700 shadow-sm ring-1 ring-slate-200 transition hover:text-resqBlue">
-                                    Promo <i class="ph ph-caret-down text-slate-500"></i>
-                                </button>
-                                <button type="button" class="dashboard-toast-trigger flex items-center gap-1.5 whitespace-nowrap rounded-full bg-white px-4 py-2 text-[13px] font-bold text-slate-700 shadow-sm ring-1 ring-slate-200 transition hover:text-resqBlue">
-                                    Semua Filter <i class="ph ph-sliders-horizontal text-slate-500"></i>
                                 </button>
                             </div>
 
-                            <button id="dashboard-sort" type="button" class="ml-auto flex items-center gap-1.5 whitespace-nowrap rounded-full border border-slate-200 bg-white px-5 py-2 text-[13px] font-bold text-slate-700 transition hover:border-resqBlue hover:text-resqBlue">
+                            <button id="dashboard-sort" type="button" class="ml-auto flex items-center gap-1.5 whitespace-nowrap rounded-full border border-slate-200 bg-white px-6 py-2.5 text-[14px] font-bold text-slate-700 transition hover:border-resqNavy hover:text-resqNavy shadow-sm">
                                 Urutkan <i class="ph ph-caret-down text-slate-500"></i>
                             </button>
                         </section>

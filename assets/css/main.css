@@ -354,6 +354,25 @@ body {
     animation: notificationDotPulse 1.8s ease-in-out infinite;
 }
 
+.dashboard-filter {
+    transition: all .2s cubic-bezier(.16, 1, .3, 1);
+}
+
+.dashboard-filter:not(.bg-resqBlue):hover {
+    background-color: #f8fafc !important;
+    border-color: #011837 !important;
+    color: #011837 !important;
+    box-shadow: 0 4px 12px rgba(15, 23, 42, .08) !important;
+}
+
+.dashboard-filter:not(.bg-resqBlue):hover i {
+    color: #011837 !important;
+}
+
+.dashboard-filter:active {
+    transform: scale(.97);
+}
+
 .filter-dropdown {
     position: relative;
     z-index: 20;
