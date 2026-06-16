@@ -141,7 +141,13 @@ export async function getUserHomePage(user) {
     const profile = await getPartnerProfile(user);
     if (!isPartnerProfileComplete(profile)) return "partner-onboarding.html";
 
-    // Default to app.html for all users to allow dual access.
+    // Specific redirect for requested emails
+    const email = (user.email || "").trim().toLowerCase();
+    if (email === "starbuck@resq.com" || email === "admin@gmail.com") {
+        return "admin.html";
+    }
+
+    // Default to app.html for all other users to allow dual access.
     // Partners can switch to admin.html via the "Mitra" button.
     return "app.html";
 }
