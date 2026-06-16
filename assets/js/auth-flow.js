@@ -139,7 +139,11 @@ export async function getUserHomePage(user) {
     if (!await isPartnerAccount(user)) return "app.html";
 
     const profile = await getPartnerProfile(user);
-    return isPartnerProfileComplete(profile) ? "admin.html" : "partner-onboarding.html";
+    if (!isPartnerProfileComplete(profile)) return "partner-onboarding.html";
+
+    // Default to app.html for all users to allow dual access.
+    // Partners can switch to admin.html via the "Mitra" button.
+    return "app.html";
 }
 
 export function redirectWhenLoggedIn(target = "app.html") {
