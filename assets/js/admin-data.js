@@ -27,6 +27,7 @@ export async function loadAdminData() {
     const orders = mergeById(snapshotToList(ordersSnapshot), readLocalList(LOCAL_ORDERS_KEY)).map((item) => ({
         id: item.id,
         customerEmail: item.customer_email || "customer@resq.com",
+        customerName: item.customer_name || null,
         productName: item.product_name || "Menu tidak diketahui",
         menuName: item.product_name || "Menu tidak diketahui",
         productId: item.product_id || null,

@@ -491,9 +491,9 @@ function renderSuspendedState() {
 }
 
 function normalizeOrderView(order, index) {
-    const code = order.pickup_code || order.code || order.product?.sub || Math.floor(1000 + Math.random() * 9000).toString();
+    const code = order.pickupCode || order.pickup_code || order.code || order.product?.sub || Math.floor(1000 + Math.random() * 9000).toString();
     const blurredCode = code.length > 0 ? code.slice(0, -1) + "•" : code;
-    const recipient = order.customer_name || getCustomerName(order.customerEmail) || "Pelanggan RESQ";
+    const recipient = order.customerName || order.customer_name || getCustomerName(order.customerEmail) || "Pelanggan RESQ";
     const status = normalizeAdminOrderStatus(order.status);
 
     return {
