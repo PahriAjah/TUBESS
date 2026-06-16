@@ -511,7 +511,7 @@ function normalizeOrderView(order, index) {
         priceValue: parsePrice(order.price || order.total_price),
         status,
         color: statusColor(status),
-        pickup: order.pickup || "-",
+        pickup: order.pickup_time || order.pickup || "-",
         createdAt: Number(order.createdAt || order.timestamp || Date.now() - index * 60000)
     };
 }
@@ -720,14 +720,14 @@ function orderToView(order) {
     const status = order.status || "Diproses";
     return {
         product: {
-            img: pickImage(order.productName || order.menuName),
-            name: order.productName || order.menuName || "Produk Surplus",
+            img: pickImage(order.productName || order.menuName || order.product_name),
+            name: order.productName || order.menuName || order.product_name || "Produk Surplus",
             sub: order.id ? `#${order.id}` : getCustomerName(order.customerEmail)
         },
-        price: formatRupiah(Number(order.totalPrice || order.total || order.price || 0)),
+        price: formatRupiah(Number(order.totalPrice || order.total || order.price || order.total_price || 0)),
         status,
         color: statusColor(status),
-        pickup: order.pickupTime || order.pickupCode || "-"
+        pickup: order.pickup_time || order.pickupTime || order.pickupCode || "-"
     };
 }
 

@@ -362,6 +362,14 @@ confirmButton?.addEventListener("click", async () => {
     confirmButton.innerText = "Memproses...";
     confirmButton.disabled = true;
 
+    const pickupTime = byId("pickup-time")?.value;
+    if (!pickupTime) {
+        showToast("Pilih waktu pickup", "Silakan tentukan jam pengambilan makanan.");
+        confirmButton.innerText = "Buat Pesanan";
+        confirmButton.disabled = false;
+        return;
+    }
+
     const pickupCode = Math.floor(1000 + Math.random() * 9000).toString();
 
     try {
@@ -375,6 +383,7 @@ confirmButton?.addEventListener("click", async () => {
             payment_method: paymentMethod.value,
             payment_demo: paymentMethod.value === "QRIS",
             pickup_code: pickupCode,
+            pickup_time: pickupTime,
             customer_email: userEmail,
             customer_name: userName.innerText || userEmail.split("@")[0],
             status: "Diproses",
@@ -473,6 +482,7 @@ async function loadOrders() {
             price: Number(item.total_price) || 0,
             method: item.payment_method || "-",
             code: item.pickup_code || "-",
+            pickup_time: item.pickup_time || "-",
             status: normalizeOrderStatus(item.status || "Diproses"),
             timestamp: item.timestamp || 0
         }))
@@ -628,6 +638,11 @@ function renderOrders(orders) {
                             <div>
                                 <p class="text-[10px] font-black uppercase tracking-widest text-slate-400">Kode Pickup</p>
                                 <p class="mt-0.5 font-mono text-sm font-black text-resqBlue">${escapeHtml(order.code)}</p>
+                            </div>
+                            <div class="h-8 w-px bg-slate-100"></div>
+                            <div>
+                                <p class="text-[10px] font-black uppercase tracking-widest text-slate-400">Waktu Pickup</p>
+                                <p class="mt-0.5 text-sm font-black text-resqBlue">${escapeHtml(order.pickup_time)} WIB</p>
                             </div>
                             <div class="h-8 w-px bg-slate-100"></div>
                             <div>
