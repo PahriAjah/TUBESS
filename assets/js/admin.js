@@ -554,9 +554,9 @@ function renderSuspendedState() {
 function normalizeOrderView(order, index) {
     let rawCode = order.pickupCode || order.pickup_code || order.code || order.product?.sub;
     
-    // If no code exists, create a stable one based on the order ID so it doesn't change
+    // Create a stable code based on order data if it's missing
     if (!rawCode || rawCode === "-") {
-        const seed = String(order.id || index);
+        const seed = String(order.id || order.timestamp || index);
         let hash = 0;
         for (let i = 0; i < seed.length; i++) {
             hash = ((hash << 5) - hash + seed.charCodeAt(i)) | 0;
@@ -565,8 +565,9 @@ function normalizeOrderView(order, index) {
     }
 
     const code = String(rawCode).trim();
-    const blurredCode = code.length > 0 ? code.slice(0, -1) + "•" : code;
-    const recipient = order.customerName || order.customer_name || getCustomerName(order.customerEmail) || "Pelanggan RESQ";
+    // Hidden from Mitra (Admin), but kept in data for verification
+    const blurredCode = "••••"; 
+    const recipient = order.customerEmail || "Pelanggan RESQ";
     const status = normalizeAdminOrderStatus(order.status);
 
     return {
@@ -578,7 +579,7 @@ function normalizeOrderView(order, index) {
         product: {
             img: order.product?.img || pickImage(order.product?.name || order.product_name),
             name: order.product?.name || order.product_name || "Produk Surplus",
-            sub: blurredCode
+            sub: "Pesanan Masuk"
         },
         price: order.price || formatRupiah(order.total_price) || "Rp 0",
         priceValue: parsePrice(order.price || order.total_price),

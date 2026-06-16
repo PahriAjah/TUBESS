@@ -328,7 +328,6 @@ function renderOrders(data) {
                 </div>
                 <dl class="space-y-3 text-sm">
                     <div class="flex justify-between gap-4 border-b border-gray-100 pb-3"><dt class="text-gray-500">Penerima</dt><dd id="modal-order-recipient" class="font-bold text-resq-navy"></dd></div>
-                    <div class="flex justify-between gap-4 border-b border-gray-100 pb-3"><dt class="text-gray-500">Kode pickup</dt><dd id="modal-order-code" class="font-bold text-resq-navy"></dd></div>
                     <div class="flex justify-between gap-4 border-b border-gray-100 pb-3"><dt class="text-gray-500">Harga</dt><dd id="modal-order-price" class="font-bold text-resq-navy"></dd></div>
                     <div class="flex justify-between gap-4 border-b border-gray-100 pb-3"><dt class="text-gray-500">Status</dt><dd id="modal-order-status"></dd></div>
                     <div class="flex justify-between gap-4"><dt class="text-gray-500">Jadwal pickup</dt><dd id="modal-order-pickup" class="font-bold text-resq-navy"></dd></div>
