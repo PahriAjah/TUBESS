@@ -431,7 +431,7 @@ function setupOrderInteractions(initialOrders = []) {
             return;
         }
 
-        if (row) {
+        if (row && !event.target.closest("input[type='checkbox']")) {
             openOrderModal(row.dataset.orderRow, orders, elements, state);
         }
     });
